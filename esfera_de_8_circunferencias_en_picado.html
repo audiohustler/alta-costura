@@ -38,7 +38,7 @@
     /**
      * Arquitectura de renderizado 3D de alta eficiencia (Zero-Allocation Loop):
      * - 8 meridianos cruzados en ambos polos y 5 paralelos de latitud, incluido el ecuador.
-     * - El cursor vertical inclina el globo hasta 80°; el horizontal cambia su ángulo de base.
+     * - El cursor vertical inclina el globo hasta 360°; el horizontal cambia su ángulo de base.
      * - Proyección 3D en picado con rotación lenta alrededor del eje polar.
      * - Trazo uniforme de 1px, sin atenuación ni efectos.
      */
@@ -56,12 +56,11 @@
       const TWO_PI = Math.PI * 2;
       const MERIDIAN_STEP = Math.PI / MERIDIANS; // 22.5° (π/8 rad): 8 círculos completos = 16 semiarcos cada 22.5°
       const SEGMENTS = 96;                       // Alta suavidad por circunferencia
-      const FIT_ANGLE_STEPS = 256;
 
       // Parámetros de cámara y orientación
       const PICADO_TILT_RAD = (32 * Math.PI) / 180; // Perspectiva en picado (~32° mirando desde arriba)
       const ROLL_RIGHT_RAD = (10 * Math.PI) / 180;  // Inclinación de 10° hacia la derecha
-      const MAX_CURSOR_TILT_RAD = (80 * Math.PI) / 180;
+      const MAX_CURSOR_TILT_RAD = TWO_PI;
       const MAX_CURSOR_SPIN_OFFSET_RAD = Math.PI / 2;
       const FOV_FACTOR = 3.2;                       // Distancia focal relativa al radio para perspectiva natural
       const ANGULAR_VELOCITY = TWO_PI / 38;         // Velocidad lenta: 1 rotación completa cada 38s
@@ -111,6 +110,7 @@
       let fitMinY = 0;
       let fitMaxY = 0;
       let spinAngle = 0;
+      let spinDirection = 1;
       let angularVelocity = ANGULAR_VELOCITY;
       let targetAngularVelocity = ANGULAR_VELOCITY;
       let cursorX = 0;
@@ -125,70 +125,15 @@
       let lineColor = '#000000';
 
       /**
-       * Bound the union of every projected circle across one complete rotation of the meridian set.
+       * Bound the projected sphere silhouette for any rotation.
        */
       function calculateFitBounds() {
-        fitMinX = Infinity;
-        fitMaxX = -Infinity;
-        fitMinY = Infinity;
-        fitMaxY = -Infinity;
-
-        const fitPitches = [
-          PICADO_TILT_RAD,
-          Math.PI / 2,
-          PICADO_TILT_RAD + MAX_CURSOR_TILT_RAD
-        ];
-        for (let p = 0; p < fitPitches.length; p++) {
-          const cosFitPitch = Math.cos(fitPitches[p]);
-          const sinFitPitch = Math.sin(fitPitches[p]);
-          for (let a = 0; a <= FIT_ANGLE_STEPS; a++) {
-            const fitAngle = (a / FIT_ANGLE_STEPS) * MERIDIAN_STEP;
-            const cosFit = Math.cos(fitAngle);
-            const sinFit = Math.sin(fitAngle);
-            const cameraDist = sphereRadius * FOV_FACTOR;
-
-            for (let m = 0; m < RING_COUNT; m++) {
-              const isMeridian = m < MERIDIANS;
-              const parallel = m - MERIDIANS;
-              const azCos = isMeridian
-                ? meridianCos[m] * cosFit - meridianSin[m] * sinFit
-                : 0;
-              const azSin = isMeridian
-                ? meridianSin[m] * cosFit + meridianCos[m] * sinFit
-                : 0;
-
-              for (let s = 0; s <= SEGMENTS; s++) {
-                let x0;
-                let y0;
-                let z0;
-                if (isMeridian) {
-                  const radial = sphereRadius * ringSin[s];
-                  x0 = radial * azCos;
-                  y0 = sphereRadius * ringCos[s];
-                  z0 = radial * azSin;
-                } else {
-                  const angle = (s / SEGMENTS) * TWO_PI + fitAngle;
-                  const radial = sphereRadius * parallelCos[parallel];
-                  x0 = radial * Math.cos(angle);
-                  y0 = sphereRadius * parallelSin[parallel];
-                  z0 = radial * Math.sin(angle);
-                }
-                const y1 = y0 * cosFitPitch - z0 * sinFitPitch;
-                const z1 = y0 * sinFitPitch + z0 * cosFitPitch;
-                const perspective = cameraDist / (cameraDist - z1);
-                const px = x0 * perspective;
-                const py = -y1 * perspective;
-                const x = px * cosRoll - py * sinRoll;
-                const y = px * sinRoll + py * cosRoll;
-
-                fitMinX = Math.min(fitMinX, x);
-                fitMaxX = Math.max(fitMaxX, x);
-                fitMinY = Math.min(fitMinY, y);
-                fitMaxY = Math.max(fitMaxY, y);
-              }
-            }
-          }
-        }
+        const projectedRadius =
+          sphereRadius * FOV_FACTOR / Math.sqrt(FOV_FACTOR * FOV_FACTOR - 1);
+        fitMinX = -projectedRadius;
+        fitMaxX = projectedRadius;
+        fitMinY = -projectedRadius;
+        fitMaxY = projectedRadius;
       }
 
       function handleResize() {
@@ -301,7 +246,7 @@
         angularVelocity += (targetAngularVelocity - angularVelocity) * easing;
         sphereTilt += (targetSphereTilt - sphereTilt) * easing;
         sphereSpinOffset += (targetSphereSpinOffset - sphereSpinOffset) * easing;
-        spinAngle = (spinAngle + angularVelocity * deltaSeconds) % TWO_PI;
+        spinAngle = (spinAngle + spinDirection * angularVelocity * deltaSeconds) % TWO_PI;
 
         renderFrame();
         rafId = window.requestAnimationFrame(animate);
@@ -322,6 +267,10 @@
 
       window.addEventListener('message', (event) => {
         if (event.source !== window.parent || !event.data) return;
+        if (event.data.type === 'alta-costura-direction-toggle') {
+          spinDirection *= -1;
+          return;
+        }
         if (event.data.type === 'alta-costura-theme') {
           lineColor = event.data.theme === 'dark' ? '#ffffff' : '#000000';
           renderFrame();
@@ -343,8 +292,9 @@
         const sectionSpeed = 1 - sectionProgress * 0.75;
         const edgeProximity = Math.max(Math.abs(cursorX), Math.abs(cursorY));
         const edgeBoost = edgeProximity * (1 - sectionProgress);
+        const leftBoost = Math.max(0, -cursorX) * (1 - sectionProgress);
         targetAngularVelocity =
-          ANGULAR_VELOCITY * sectionSpeed * (1 + edgeBoost * 2.5);
+          ANGULAR_VELOCITY * sectionSpeed * (1 + edgeBoost * 2.5 + leftBoost * 2.5);
       });
 
       // Pausa automática cuando la pestaña está oculta

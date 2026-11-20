@@ -1,0 +1,7 @@
+css
+:root { --bg:#fff; --text:#111; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg:#0e0e10; --text:#eee; }
+}
+:root[data-theme="dark"] { --bg:#0e0e10; --text:#eee; }
+body { background:var(--bg); color:var(--text); }

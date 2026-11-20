@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roster — Artistas</title>
+<style>
+  :root {
+    --flip-dur: 1s;   /* duración del giro (≈ medio segundo) */
+    --gap: 27px;        /* distancia entre shapes */
+    --extra: 2px;       /* lo que se alarga el shape */
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: #ffffff;
+    color: #111111;
+    font-family: "Arial Black", "Arial Bold", Gadget, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 900;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ---------- Grid 4 columnas, de borde a borde ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    /* fila: 5px extra + 17px de aire  |  columna: 17px */
+    gap: calc(var(--extra) + var(--gap)) var(--gap);
+    width: 100%;
+  }
+
+  .cell { min-width: 0; }
+
+  /* ---------- Zona sensible = el shape exacto (borde negro incluido) ---------- */
+  .hit {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: calc(133.3333% + var(--extra)); /* ratio 3:4 + 5px */
+    perspective: 1600px;
+    perspective-origin: 50% 50%;
+  }
+
+  /* ---------- Tarjeta que gira sobre el eje Y ---------- */
+  .card {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    /* rotateY = giro sobre el eje vertical (de izquierda a derecha) */
+    transform: rotateY(0deg);
+    transition: transform var(--flip-dur) cubic-bezier(.45, .05, .55, .95);
+    will-change: transform;
+  }
+
+  .hit:hover .card,
+  .hit:focus-within .card,
+  .cell.is-flipped .card {
+    transform: rotateY(-180deg);
+  }
+
+  /* ---------- Caras ---------- */
+  .face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 7% 6%;
+    background: #ffffff;
+    border: 2px solid #111111;
+    border-radius: clamp(12px, 1.1vw, 20px);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .face--front { justify-content: center; }
+
+  .face--back {
+    /* compensa el giro de -180° para que el texto quede derecho */
+    transform: rotateY(180deg);
+    justify-content: flex-start;  /* centrado vertical, pegado a la izquierda */
+    text-align: left;
+  }
+
+  .info { width: 100%; }
+
+  /* ---------- Tipografía ---------- */
+  .artist {
+    margin: 0 0 0.55em;
+    font-size: clamp(13px, 1.45vw, 24px);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+  }
+
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+    font-family: "Courier New", Courier, monospace;
+    font-weight: 400;
+    font-size: clamp(10px, 1.05vw, 17px);
+    line-height: 1.45;
+  }
+
+  .links a {
+    width: fit-content;
+    color: #0000ee;                 /* azul hipervínculo clásico */
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .links a:visited { color: #551a8b; }
+  .links a:hover   { background: #ffffcc; }
+
+  /* ---------- Accesibilidad / móvil ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .card { transition-duration: 0.001s; }
+  }
+
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .artist { font-size: clamp(14px, 3.4vw, 22px); }
+    .links  { font-size: clamp(11px, 2.6vw, 16px); }
+  }
+</style>
+</head>
+<body>
+
+<main class="grid">
+
+  <!-- 1 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">Carol</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/caro-so-3" target="_blank" rel="noopener">soundcloud</a>
+              <a href="https://itsmyecarol.bandcamp.com/track/met-lico-ambiental" target="_blank" rel="noopener">bandcamp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 2 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">FRSH</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/rubents" target="_blank" rel="noopener">soundcloud</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 3 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">i2terzon3</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/chichedeacaalavuelta" target="_blank" rel="noopener">soundcloud</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 4 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">Kodex</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/kodex313" target="_blank" rel="noopener">soundcloud</a>
+              <a href="https://demian222.bandcamp.com/track/bass-research" target="_blank" rel="noopener">bandcamp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 5 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">Laura Butallo</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/laurabutallo" target="_blank" rel="noopener">soundcloud</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 6 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">lux2000</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/offlinesound" target="_blank" rel="noopener">soundcloud</a>
+              <a href="https://md0110010101.bandcamp.com" target="_blank" rel="noopener">bandcamp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 7 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">Manu Jaikin</h2>
+            <div class="links">
+              <a href="https://manujaikin.bandcamp.com/" target="_blank" rel="noopener">bandcamp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 8 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">Mlee</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/mleebsas" target="_blank" rel="noopener">soundcloud</a>
+              <a href="https://vistarecordings.bandcamp.com/" target="_blank" rel="noopener">bandcamp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 9 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">Onzo</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/onzooo" target="_blank" rel="noopener">soundcloud</a>
+              <a href="https://onzo.bandcamp.com/" target="_blank" rel="noopener">bandcamp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 10 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">Qetsy</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/qetsyqetsy" target="_blank" rel="noopener">soundcloud</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 11 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">SKSSS</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/sksksss" target="_blank" rel="noopener">soundcloud</a>
+              <a href="https://sksss.bandcamp.com/album/exploraciones-al-vacio-aer015" target="_blank" rel="noopener">bandcamp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 12 -->
+  <article class="cell">
+    <div class="hit">
+      <div class="card">
+        <div class="face face--front"></div>
+        <div class="face face--back">
+          <div class="info">
+            <h2 class="artist">Teg Dat</h2>
+            <div class="links">
+              <a href="https://soundcloud.com/tegdat" target="_blank" rel="noopener">soundcloud</a>
+              <a href="https://tegdat.bandcamp.com" target="_blank" rel="noopener">bandcamp</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+</main>
+
+<script>
+  /* Soporte táctil: en dispositivos sin hover, tocar el shape lo gira */
+  const noHover = window.matchMedia('(hover: none)');
+
+  document.querySelectorAll('.cell').forEach(cell => {
+    cell.addEventListener('click', (e) => {
+      if (!noHover.matches) return;          // con mouse manda el :hover
+      if (e.target.closest('a')) return;     // no interferir con los links
+      cell.classList.toggle('is-flipped');
+    });
+  });
+</script>
+
+</body>
+</html>

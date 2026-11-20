@@ -4,10 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width" />
   <title>ALTA COSTURA</title>
+  <link rel="icon" type="image/png" href="../images/icon-logo-final.png" />
   <style>
     /* ---------- night-shift.css (base) ---------- */
     :root {
       --page-edge: 3px;
+      --section-space: 5em;
       --bg: #fff;
       --text: #111;
       --link: #0000ff;
@@ -149,18 +151,29 @@
       position: fixed;
       top: var(--page-edge);
       left: var(--page-edge);
+      right: var(--page-edge);
       z-index: 200;
       display: flex;
       align-items: stretch;
       gap: 2.5rem;
-      transform: scale(var(--scroll-scale, 1));
+      width: auto;
+      transform: translateX(var(--title-offset-x, 0px)) scale(var(--scroll-scale, 1));
       transform-origin: top left;
       will-change: transform;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.main-active .title-row {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .site-title {
       margin: 0;
-      font-size: clamp(calc(2.4rem + 8px), calc(9vw + 8px), 102px);
+      font-size: clamp(calc(2.4rem + 14px), calc(9vw + 14px), 108px);
       line-height: .9;
       font-weight: normal;
       letter-spacing: -.01em;
@@ -168,23 +181,28 @@
     }
 
     .tagline {
+      position: absolute;
+      top: calc(100% + 12px);
+      left: calc(var(--site-title-width, 0px) + (100% - var(--site-title-width, 0px)) / 2);
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
+      font-size: 35px;
+      font-weight: normal;
       line-height: 1.1;
       text-align: justify;
       text-justify: inter-word;
       text-align-last: justify;
-      width: 34ch;
-      max-width: 34ch;
-      align-self: stretch;
+      text-transform: uppercase;
+      color: var(--text);
+      transform: translateX(-50%);
+      width: min(34ch, 48vw, calc(100% - var(--site-title-width, 0px)));
+      max-width: calc(100% - var(--site-title-width, 0px));
       opacity: 0;
       transition: opacity .18s linear;
-      padding-top: 2px;
       pointer-events: none;
     }
 
-    .site-title:hover + .tagline,
-    .tagline:hover { opacity: 1; pointer-events: auto; }
+    body.main-active .site-title:hover + .tagline,
+    body.main-active .tagline:hover { opacity: 1; pointer-events: auto; }
 
     /* ---------- nav ---------- */
     .page-nav {
@@ -200,6 +218,12 @@
       transition: opacity .3s ease;
     }
 
+    .page-nav::before {
+      position: absolute;
+      inset: -4px;
+      content: "";
+    }
+
     .page-link {
       color: var(--link);
       font-size: clamp(1.2rem, 4.7vw, 4rem);
@@ -209,8 +233,10 @@
     /* ---------- catálogo ---------- */
     #catalogo {
       --catalog-reduction: 3px;
-      --embed-extra-reduction: 6px;
-      border-top: 1px solid var(--text);
+      display: flex;
+      flex-direction: column;
+      gap: var(--section-space);
+      margin-block: var(--section-space);
     }
 
     .release {
@@ -218,7 +244,6 @@
       display: flex;
       flex-direction: row;          /* 1°, 3°, 5°: cover izq. */
       scroll-snap-align: start;
-      border-bottom: 1px solid var(--text);
     }
 
     .release:nth-child(even) {
@@ -289,7 +314,7 @@
       margin: 0;
       max-width: 44ch;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: calc(.95rem - var(--catalog-reduction));
+      font-size: 14px;
       line-height: 1.35;
       text-align: justify;
       text-justify: inter-word;
@@ -340,96 +365,343 @@
 
     .release iframe {
       width: 100%;
-      max-width: calc(380px - var(--catalog-reduction) - var(--embed-extra-reduction));
-      height: calc(480px - var(--catalog-reduction) - var(--embed-extra-reduction));
-      flex: 0 0 calc(480px - var(--catalog-reduction) - var(--embed-extra-reduction));
+      max-width: 380px;
+      height: 480px;
+      flex: 0 0 480px;
       border: 1px solid var(--text);
       background: #fff;
     }
 
-    /* ---------- placeholders ---------- */
-    .placeholder {
-      min-height: 100vh;
+    /* ---------- radio ---------- */
+    .radio-page {
+      position: relative;
+      padding: 0;
+      margin-block: var(--section-space);
+      background: var(--bg);
+      color: var(--text);
+      scroll-snap-align: start;
+    }
+
+    .section-heading {
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 1;
+      margin: 0;
+      text-align: right;
+      font-family: "Arial Black", Arial, sans-serif;
+      font-weight: 900;
+      font-style: normal;
+      font-size: clamp(62px, calc(4vw + 30px), 94px);
+      line-height: 1;
+    }
+
+    .section-heading mark {
+      padding: 0;
+      background: #fff;
+      color: #000;
+    }
+
+    .radio-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: start;
+      width: 100%;
+      padding-top: clamp(5rem, calc(4vw + 40px), 6.5rem);
+    }
+
+    .radio-column {
+      min-width: 0;
+    }
+
+    .radio-column h2 {
+      margin: 0;
+      padding: 0;
+      color: var(--text);
+      font: 400 14px/1.2 "Courier New", Courier, monospace;
+    }
+
+    .radio-column h2 mark {
+      padding: 0;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .radio-player {
+      display: block;
+      width: 100%;
+      height: 450px;
+      margin: 0;
+      border: 0;
+      background: #fff;
+    }
+
+    .radio-links {
+      grid-column: 2;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 1rem;
-      padding: 2rem;
-      text-align: center;
-      scroll-snap-align: start;
-      border-bottom: 1px solid var(--text);
+      gap: .75rem;
+      padding: .5rem .5rem 0;
+      font: 12px/1.4 "Courier New", Courier, monospace;
     }
 
-    .placeholder h2 {
-      margin: 0;
-      font-weight: normal;
-      font-style: italic;
-      font-size: clamp(2.4rem, 8vw, 6rem);
-      line-height: 1;
-    }
+    .radio-links a:last-child { align-self: flex-end; }
 
-    .placeholder p {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 13px;
-      letter-spacing: .04em;
-    }
-
-    .artist-directory {
+    /* ---------- imaginería ---------- */
+    .imagineria-page {
       min-height: 100vh;
-      padding: 3rem 2rem;
+      margin-block: var(--section-space);
+      background: var(--bg);
       scroll-snap-align: start;
-      border-bottom: 1px solid var(--text);
     }
 
-    .artist-directory h2 {
-      margin: 0 0 2rem;
-      text-align: center;
-      font-weight: normal;
-      font-style: italic;
-      font-size: clamp(2.4rem, 8vw, 6rem);
-      line-height: 1;
+    .imagineria-frame {
+      display: block;
+      width: 100%;
+      height: 100vh;
+      height: 100svh;
+      border: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 2s ease, visibility 0s linear 2s;
     }
 
-    .artist-profiles {
+    body.imagineria-active .imagineria-frame {
+      opacity: 1;
+      visibility: visible;
+      transition-delay: 0s;
+    }
+
+    .fiestas-page {
+      margin-block: var(--section-space);
+    }
+
+    .fiestas-video-stage {
+      width: 100%;
+      height: 100vh;
+      height: 100svh;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-      gap: 1rem 2rem;
-      max-width: 70rem;
-      margin: 0 auto;
+      place-items: center;
+      padding-bottom: 36px;
+      background: var(--bg);
+      scroll-snap-align: start;
     }
 
-    .artist-profile {
-      min-height: 5rem;
-      padding-top: .5rem;
-      border-top: 1px solid var(--text);
+    .fiestas-vimeo-frame {
+      position: relative;
+      width: min(100vw, calc(177.78vh - 64px));
+      width: min(100vw, calc(177.78svh - 64px));
+      aspect-ratio: 16 / 9;
+    }
+
+    .fiestas-local-video-stage {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding-bottom: 36px;
+      background: var(--bg);
+      scroll-snap-align: start;
+    }
+
+    .fiestas-local-video-frame {
+      position: relative;
+      width: min(100vw, calc(177.78vh - 64px));
+      width: min(100vw, calc(177.78svh - 64px));
+      aspect-ratio: 16 / 9;
+    }
+
+    .fiestas-video {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .flyers-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.618fr) repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(6, minmax(10rem, 14vw));
+      grid-template-areas:
+        "rashad rashad-radio ."
+        "rashad rashad-radio ."
+        "dmetal primera ."
+        "atlanta atlanta-radio ."
+        "atlanta atlanta-radio ."
+        "shell shell shell";
+      gap: 0;
+      padding: 0;
+    }
+
+    .flyer {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .flyer img,
+    .flyer video {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .flyer-open {
+      position: absolute;
+      inset: -2px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .flyer-open img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .flyer-rashad { grid-area: rashad; }
+    .flyer-dmetal { grid-area: dmetal; }
+    .flyer-primera { grid-area: primera; }
+    .flyer-atlanta { grid-area: atlanta; }
+    .flyer-shell { grid-area: shell; }
+
+    .flyer-player {
+      display: block;
+      grid-area: var(--flyer-player-area);
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      margin: 0;
+      border: 0;
+      background: #fff;
+    }
+
+    .flyer-rashad-player { --flyer-player-area: rashad-radio; }
+    .flyer-atlanta-player { --flyer-player-area: atlanta-radio; }
+
+    /* ---------- artist cards ---------- */
+    .artist-directory {
+      position: relative;
+      min-height: 100vh;
+      margin-block: var(--section-space);
+      padding: 0;
+      scroll-snap-align: start;
+    }
+
+    .artist-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 19px;
+      width: 100%;
+      padding-top: clamp(5rem, calc(4vw + 40px), 6.5rem);
+    }
+
+    .artist-card-cell {
+      min-width: 0;
       scroll-margin-top: 2rem;
     }
 
-    .artist-profile h3 {
-      margin: 0;
-      font-weight: normal;
-      font-size: 1.5rem;
+    .artist-hit {
+      position: relative;
+      width: 100%;
+      height: 0;
+      padding-bottom: calc(133.3333% + 2px);
+      perspective: 1600px;
     }
 
-    .artist-profile p {
-      margin: .35rem 0 0;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 13px;
+    .artist-card {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transition: transform 2.6s cubic-bezier(.45, .05, .55, .95);
+    }
+
+    .artist-hit:hover .artist-card,
+    .artist-hit:focus .artist-card,
+    .artist-hit:focus-within .artist-card,
+    .artist-card-cell.is-flipped .artist-card {
+      transform: rotateY(-180deg);
+    }
+
+    .artist-face {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      padding: 7% 6%;
+      background: var(--bg);
+      border: 2px solid var(--text);
+      border-radius: clamp(12px, 1.1vw, 20px);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+
+    .artist-face--front { justify-content: center; }
+
+    .artist-face--back {
+      transform: rotateY(180deg);
+      justify-content: flex-start;
+      text-align: left;
+    }
+
+    .artist-card-info { width: 100%; }
+
+    .artist-card-name {
+      margin: 0 0 .55em;
+      font-size: clamp(13px, 1.45vw, 24px);
+      line-height: 1.1;
+      letter-spacing: -.01em;
+      font-weight: 900;
+      overflow-wrap: anywhere;
+    }
+
+    .artist-card-links {
+      display: flex;
+      flex-direction: column;
+      gap: .2em;
+      font: 400 clamp(10px, 1.05vw, 17px)/1.45 "Courier New", Courier, monospace;
+    }
+
+    .artist-card-links a {
+      width: fit-content;
+      color: var(--link);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .artist-card-links a:visited { color: var(--accent); }
+    .artist-card-links a:hover { background: #ffffcc; }
+    .artist-card-links span { font-weight: 400; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .artist-card { transition-duration: .001s; }
     }
 
     /* ---------- footer ---------- */
     .site-footer {
       position: relative;
-      min-height: 30vh;
+      min-height: 100vh;
       padding: 3rem 2rem 2rem;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 1.5rem;
-      border-top: 1px solid var(--text);
+      margin-top: var(--section-space);
       text-align: center;
       scroll-snap-align: end;
     }
@@ -441,7 +713,7 @@
       left: 0;
       margin: 0;
       padding: 0 3px;
-      font: 4px/1.2 "Courier New", Courier, monospace;
+      font: 9px/1.2 "Courier New", Courier, monospace;
       text-align: center;
     }
 
@@ -463,10 +735,12 @@
       inset: 0;
       z-index: -1;
       pointer-events: none;
-      transition: filter .35s ease;
+      opacity: 0;
+      transition: opacity .6s ease;
     }
 
-    body:has(.release:hover) .sphere-background { filter: blur(8px); }
+    body.main-active .sphere-background,
+    body.footer-active .sphere-background { opacity: 1; }
 
     .sphere-frame {
       display: block;
@@ -493,16 +767,38 @@
 
     .cover-viewer::backdrop { background: rgba(0, 0, 0, .5); }
 
-    .cover-viewer img {
+    .cover-viewer-frame {
       position: absolute;
       top: 50%;
       left: 50%;
-      display: block;
-      width: min(60vw, 600px);
-      height: min(60vw, 600px);
+      width: max-content;
+      max-width: min(60vw, 600px);
       max-height: 70vh;
+      margin: 0;
       transform: translate(-50%, -50%);
+    }
+
+    .cover-viewer-frame img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 70vh;
       object-fit: contain;
+    }
+
+    .cover-viewer-caption {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      padding: .4rem .5rem;
+      background: rgba(0, 0, 0, .72);
+      color: #fff;
+      font: clamp(10px, 1.3vw, 16px)/1.2 "Courier New", Courier, monospace;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
     }
 
     @keyframes cover-fade-in {
@@ -510,12 +806,17 @@
       to { opacity: 1; }
     }
 
-    .cover-viewer[open] img {
+    .cover-viewer[open] .cover-viewer-frame img {
+      animation: cover-fade-in 1.8s ease-out both;
+    }
+
+    .cover-viewer[open] .cover-viewer-caption:not(:empty) {
       animation: cover-fade-in 1.8s ease-out both;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .cover-viewer[open] img { animation-duration: .01ms; }
+      .cover-viewer[open] .cover-viewer-frame img,
+      .cover-viewer[open] .cover-viewer-caption:not(:empty) { animation-duration: .01ms; }
     }
 
     /* ---------- contact dialog ---------- */
@@ -566,18 +867,19 @@
     /* ---------- responsive ---------- */
     @media (hover: none), (max-width: 700px) {
       .title-row {
+        display: flex;
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
       }
       .tagline {
-        opacity: 1;
-        align-self: auto;
-        overflow: visible;
-        max-width: 46ch;
-        font-size: 13px;
-        pointer-events: auto;
+        left: 0;
+        transform: none;
+        width: min(34ch, calc(100vw - var(--page-edge) - var(--page-edge)));
+        max-width: calc(100vw - var(--page-edge) - var(--page-edge));
+        font-size: 27px;
       }
+      body.main-active .tagline { opacity: 1; pointer-events: auto; }
     }
 
     @media (max-width: 820px) {
@@ -592,6 +894,25 @@
       }
       .release .info  { flex: 1 1 auto; min-height: 45vh; width: 100%; }
       .page-nav { bottom: var(--page-edge); left: var(--page-edge); }
+      .flyers-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(7, minmax(11rem, 42vw));
+        grid-template-areas:
+          "rashad rashad"
+          "rashad-player rashad-player"
+          "dmetal dmetal"
+          "primera primera"
+          "atlanta atlanta"
+          "atlanta-player atlanta-player"
+          "shell shell";
+      }
+      .flyer-rashad-player { --flyer-player-area: rashad-player; }
+      .flyer-atlanta-player { --flyer-player-area: atlanta-player; }
+      .radio-grid { grid-template-columns: 1fr; }
+      .radio-links { grid-column: 1; }
+      .artist-cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .artist-card-name { font-size: clamp(14px, 3.4vw, 22px); }
+      .artist-card-links { font-size: clamp(11px, 2.6vw, 16px); }
     }
   </style>
 </head>
@@ -675,7 +996,7 @@
           data-full-image="https://f4.bcbits.com/img/a1031257088_16.jpg"
           style="background-image:url('https://f4.bcbits.com/img/a1031257088_10.jpg')"></button>
         <div class="info">
-          <p class="artist-title"><span><a href="#artist-va">V.A.</a></span><span>Sed De Rito</span></p>
+          <p class="artist-title"><span>V.A.</span><span>Sed De Rito</span></p>
           <p class="desc"><mark>Ocho tracks oscilando entre ambient y juke, coqueteando con el grime y el electro disueltos en una generosa dosis de low-end. Obras de ocho artistas argentinxs de Buenos Aires, Entre Ríos, La Plata y la Patagonia.</mark></p>
           <ul class="tracklist">
             <li><span class="track-name">1. <a href="#artist-i2terzon3">i2terzon3</a> — Satellite Collision</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">01:40</span></li>
@@ -683,7 +1004,7 @@
             <li><span class="track-name">3. <a href="#artist-carol">Carol</a> — Reposo</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">05:20</span></li>
             <li><span class="track-name">4. <a href="#artist-onzo">Onzo</a> — Silver Juke</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">02:42</span></li>
             <li><span class="track-name">5. <a href="#artist-sksss">SKSSS</a> — deepsound</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">02:58</span></li>
-            <li><span class="track-name">6. <a href="#artist-mlee">Mlee</a> — Pos Todo ft. <a href="#artist-tobey">Tobey</a></span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:57</span></li>
+            <li><span class="track-name">6. <a href="#artist-mlee">Mlee</a> — Pos Todo ft. Tobey</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:57</span></li>
             <li><span class="track-name">7. <a href="#artist-laura-butallo">Laura Butallo</a> — Dancers of Dawn</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">04:54</span></li>
             <li><span class="track-name">8. <a href="#artist-teg-dat">Teg Dat</a> — Evitome</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">04:14</span></li>
           </ul>
@@ -737,39 +1058,263 @@
 
     </section>
 
-    <section id="radio" class="placeholder" aria-label="Radio">
-      <h2>Radio</h2>
-      <p>próximamente</p>
+    <section id="radio" class="radio-page" aria-label="Radio">
+      <h2 class="section-heading"><mark>Radio</mark></h2>
+      <div class="radio-grid">
+        <article class="radio-column">
+          <h2><mark>low profile radio</mark></h2>
+          <iframe class="radio-player" title="low profile radio — Alta Costura"
+            src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/lowprofileradio/sets/alta-costura&amp;color=%23ff00ff&amp;auto_play=false&amp;hide_related=true&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true"
+            allow="autoplay" loading="lazy"></iframe>
+        </article>
+        <article class="radio-column">
+          <h2><mark>muito radio</mark></h2>
+          <iframe class="radio-player" title="muito radio — Sed de Rito"
+            src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/altacostura2050/sets/presentacion-sed-de-rito-v-a-2&amp;color=%23ff00ff&amp;auto_play=false&amp;hide_related=true&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true"
+            allow="autoplay" loading="lazy"></iframe>
+        </article>
+        <article class="radio-column">
+          <h2><mark>em4dc</mark></h2>
+          <iframe class="radio-player" title="em4dc — Alta Costura"
+            src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/em4dc/sets/alta-costura&amp;color=%23ff00ff&amp;auto_play=false&amp;hide_related=true&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true"
+            allow="autoplay" loading="lazy"></iframe>
+        </article>
+        <div class="radio-links">
+          <a href="https://soundcloud.com/muitoradio/vista-recrodings-i-episodio-4-lux2000-010823"
+            target="_blank" rel="noopener noreferrer">vista recordings x alta costura: lux2000</a>
+          <a href="https://soundcloud.com/muitoradio/vista-recordings-i-episodio-4-manu-jaikin-010823?in=muitoradio/sets/vista-recordings-resident-show"
+            target="_blank" rel="noopener noreferrer">vista recordings x alta costura: manu jaikin</a>
+        </div>
+      </div>
     </section>
 
-    <section id="imagineria" class="placeholder" aria-label="Imaginería">
-      <h2>Imaginería</h2>
-      <p>próximamente</p>
+    <section id="imagineria" class="imagineria-page" aria-label="Imaginería">
+      <iframe class="imagineria-frame" title="Deriva de imágenes"
+        src="../scripts/Deriva%20de%20im%C3%A1genes/index.html" loading="lazy"></iframe>
     </section>
 
-    <section id="fiestas" class="placeholder" aria-label="Fiestas">
-      <h2>Fiestas</h2>
-      <p>próximamente</p>
+    <section id="fiestas" class="fiestas-page" aria-label="Fiestas">
+      <div class="fiestas-video-stage">
+        <div class="fiestas-vimeo-frame">
+          <iframe class="fiestas-video"
+            src="https://player.vimeo.com/video/1248613185?autopause=0&amp;player_id=0&amp;app_id=58479"
+            title="R.A.S.H.A.D._rave_antifascista_subsonica_con_hordas_de_argentinvs_danzando"
+            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+            referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        </div>
+      </div>
+      <div class="flyers-grid" aria-label="Flyers de fiestas">
+        <figure class="flyer flyer-rashad">
+          <button class="flyer-open" type="button" aria-label="Abrir archivo ultima rashad.webp">
+            <img src="../images/imagineria/flyers/ultima%20rashad.webp" alt="" data-archive-title="ultima rashad.webp" loading="lazy" />
+          </button>
+        </figure>
+        <iframe class="flyer-player flyer-rashad-player" title="R.A.S.H.A.D. 2023 — SoundCloud"
+          src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/lowprofileradio/sets/especial-rashad&amp;color=%23ff00ff&amp;auto_play=false&amp;hide_related=true&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true"
+          allow="autoplay" loading="lazy"></iframe>
+        <figure class="flyer flyer-dmetal">
+          <button class="flyer-open" type="button" aria-label="Abrir archivo d-metal (2023).jpg">
+            <img src="../images/imagineria/flyers/d-metal%20(2023).jpg" alt="" data-archive-title="d-metal (2023).jpg" loading="lazy" />
+          </button>
+        </figure>
+        <figure class="flyer flyer-primera">
+          <button class="flyer-open" type="button" aria-label="Abrir archivo nuestra primer rave.jpg">
+            <img src="../images/imagineria/flyers/nuestra%20primer%20rave.jpg" alt="" data-archive-title="nuestra primer rave.jpg" loading="lazy" />
+          </button>
+        </figure>
+        <figure class="flyer flyer-atlanta">
+          <button class="flyer-open" type="button" aria-label="Abrir archivo rave-atlanta-2025.jpg">
+            <img src="../images/imagineria/flyers/rave-atlanta-2025.jpg" alt="" data-archive-title="rave-atlanta-2025.jpg" loading="lazy" />
+          </button>
+        </figure>
+        <iframe class="flyer-player flyer-atlanta-player" title="Rave Atlanta 2025 — SoundCloud"
+          src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/altacostura2050/sets/alta-costura-07-11-25&amp;color=%23ff00ff&amp;auto_play=false&amp;hide_related=true&amp;show_comments=true&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true"
+          allow="autoplay" loading="lazy"></iframe>
+        <figure class="flyer flyer-shell">
+          <button class="flyer-open" type="button" aria-label="Abrir archivo rave-atlanta-shell-wave-tribute-nov-2025.jpg">
+            <img src="../images/imagineria/flyers/rave-atlanta-shell-wave-tribute-nov-2025.jpg"
+              alt="" data-archive-title="rave-atlanta-shell-wave-tribute-nov-2025.jpg" loading="lazy" />
+          </button>
+        </figure>
+      </div>
+      <div class="fiestas-local-video-stage">
+        <div class="fiestas-local-video-frame">
+          <video class="fiestas-video" controls playsinline preload="none"
+            poster="../images/imagineria/flyers/d-metal%20(2023).jpg"
+            aria-label="D-Metal video flyer">
+            <source src="../images/imagineria/flyers/d-metal%20videoflyer.mp4" type="video/mp4" />
+          </video>
+        </div>
+      </div>
     </section>
 
     <section id="artistas" class="artist-directory" aria-label="Artistas">
-      <h2>Artistas</h2>
-      <div class="artist-profiles">
-        <article class="artist-profile" id="artist-manu-jaikin"><h3>Manu Jaikin</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-frsh"><h3>FRSH</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-va"><h3>V.A.</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-i2terzon3"><h3>i2terzon3</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-kodex"><h3>Kodex</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-carol"><h3>Carol</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-onzo"><h3>Onzo</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-sksss"><h3>SKSSS</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-mlee"><h3>Mlee</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-tobey"><h3>Tobey</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-laura-butallo"><h3>Laura Butallo</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-teg-dat"><h3>Teg Dat</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-lux2000"><h3>lux2000</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-dj-issues"><h3>DJ ISSUES</h3><p>próximamente</p></article>
-        <article class="artist-profile" id="artist-qetsy"><h3>Qetsy</h3><p>próximamente</p></article>
+      <h2 class="section-heading"><mark>Artistas</mark></h2>
+      <div class="artist-cards-grid">
+        <article class="artist-card-cell" id="artist-carol">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">Carol</h3>
+                <div class="artist-card-links">
+                  <a href="https://soundcloud.com/caro-so-3" target="_blank" rel="noopener noreferrer">soundcloud</a>
+                  <a href="https://itsmyecarol.bandcamp.com/track/met-lico-ambiental" target="_blank" rel="noopener noreferrer">bandcamp</a>
+                </div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-frsh">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">FRSH</h3>
+                <div class="artist-card-links"><a href="https://soundcloud.com/rubents" target="_blank" rel="noopener noreferrer">soundcloud</a></div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-i2terzon3">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">i2terzon3</h3>
+                <div class="artist-card-links"><a href="https://soundcloud.com/chichedeacaalavuelta" target="_blank" rel="noopener noreferrer">soundcloud</a></div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-kodex">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">Kodex</h3>
+                <div class="artist-card-links">
+                  <a href="https://soundcloud.com/kodex313" target="_blank" rel="noopener noreferrer">soundcloud</a>
+                  <a href="https://demian222.bandcamp.com/track/bass-research" target="_blank" rel="noopener noreferrer">bandcamp</a>
+                </div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-laura-butallo">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">Laura Butallo</h3>
+                <div class="artist-card-links"><a href="https://soundcloud.com/laurabutallo" target="_blank" rel="noopener noreferrer">soundcloud</a></div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-lux2000">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">lux2000</h3>
+                <div class="artist-card-links">
+                  <a href="https://soundcloud.com/offlinesound" target="_blank" rel="noopener noreferrer">soundcloud</a>
+                  <a href="https://md0110010101.bandcamp.com" target="_blank" rel="noopener noreferrer">bandcamp</a>
+                </div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-manu-jaikin">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">Manu Jaikin</h3>
+                <div class="artist-card-links"><a href="https://manujaikin.bandcamp.com/" target="_blank" rel="noopener noreferrer">bandcamp</a></div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-mlee">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">Mlee</h3>
+                <div class="artist-card-links">
+                  <a href="https://soundcloud.com/mleebsas" target="_blank" rel="noopener noreferrer">soundcloud</a>
+                  <a href="https://vistarecordings.bandcamp.com/" target="_blank" rel="noopener noreferrer">bandcamp</a>
+                </div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-onzo">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">Onzo</h3>
+                <div class="artist-card-links">
+                  <a href="https://soundcloud.com/onzooo" target="_blank" rel="noopener noreferrer">soundcloud</a>
+                  <a href="https://onzo.bandcamp.com/" target="_blank" rel="noopener noreferrer">bandcamp</a>
+                </div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-qetsy">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">Qetsy</h3>
+                <div class="artist-card-links"><a href="https://soundcloud.com/qetsyqetsy" target="_blank" rel="noopener noreferrer">soundcloud</a></div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-sksss">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">SKSSS</h3>
+                <div class="artist-card-links">
+                  <a href="https://soundcloud.com/sksksss" target="_blank" rel="noopener noreferrer">soundcloud</a>
+                  <a href="https://sksss.bandcamp.com/album/exploraciones-al-vacio-aer015" target="_blank" rel="noopener noreferrer">bandcamp</a>
+                </div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-teg-dat">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">Teg Dat</h3>
+                <div class="artist-card-links">
+                  <a href="https://soundcloud.com/tegdat" target="_blank" rel="noopener noreferrer">soundcloud</a>
+                  <a href="https://tegdat.bandcamp.com" target="_blank" rel="noopener noreferrer">bandcamp</a>
+                </div>
+              </div></div>
+            </div>
+          </div>
+        </article>
+        <article class="artist-card-cell" id="artist-dj-issues">
+          <div class="artist-hit" tabindex="0">
+            <div class="artist-card">
+              <div class="artist-face artist-face--front"></div>
+              <div class="artist-face artist-face--back"><div class="artist-card-info">
+                <h3 class="artist-card-name">DJ ISSUES</h3>
+                <div class="artist-card-links"><span>próximamente</span></div>
+              </div></div>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -778,15 +1323,18 @@
   <footer class="site-footer">
     <a class="footer-logo" href="#top">ALTA COSTURA</a>
     <nav class="footer-links" aria-label="Enlaces externos">
-      <a href="https://altacostura.bandcamp.com" target="_blank" rel="noopener noreferrer">Bandcamp</a>
-      <a href="https://soundcloud.com/altacostura2050" target="_blank" rel="noopener noreferrer">SoundCloud</a>
+      <a href="https://altacostura.bandcamp.com" target="_blank" rel="noopener noreferrer">bandcamp</a>
+      <a href="https://soundcloud.com/altacostura2050" target="_blank" rel="noopener noreferrer">soundcloud</a>
       <a id="contact-link" href="#contact-dialog">contacto</a>
     </nav>
     <p class="copyright-note">Hecho en Argentina. Imaginación Humana Latinoamericana. Todos los derechos reservados Alta Costura 2026.</p>
   </footer>
 
   <dialog id="cover-viewer" class="cover-viewer" aria-label="Portada">
-    <img alt="" />
+    <figure class="cover-viewer-frame">
+      <img alt="" />
+      <figcaption class="cover-viewer-caption"></figcaption>
+    </figure>
   </dialog>
 
   <dialog id="contact-dialog" class="contact-dialog" aria-label="Contacto">
@@ -801,11 +1349,26 @@
     /* ---------- cover viewer ---------- */
     var coverViewer = document.getElementById("cover-viewer");
     var coverViewerImage = coverViewer.querySelector("img");
+    var coverViewerCaption = coverViewer.querySelector("figcaption");
 
     document.querySelectorAll(".release .cover").forEach(function (cover) {
       cover.addEventListener("click", function () {
         coverViewerImage.src = cover.dataset.fullImage;
         coverViewerImage.alt = cover.getAttribute("aria-label").replace(/^View /, "");
+        coverViewerCaption.textContent = "";
+        coverViewerCaption.hidden = true;
+        coverViewer.showModal();
+      });
+    });
+
+    document.querySelectorAll(".flyer-open").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var image = button.querySelector("img");
+        var archiveTitle = image.dataset.archiveTitle;
+        coverViewerImage.src = image.currentSrc || image.src;
+        coverViewerImage.alt = archiveTitle;
+        coverViewerCaption.textContent = archiveTitle;
+        coverViewerCaption.hidden = false;
         coverViewer.showModal();
       });
     });
@@ -815,6 +1378,8 @@
     });
     coverViewer.addEventListener("close", function () {
       coverViewerImage.removeAttribute("src");
+      coverViewerCaption.textContent = "";
+      coverViewerCaption.hidden = true;
     });
 
     /* ---------- contact dialog ---------- */
@@ -836,14 +1401,50 @@
     var sphereCursorY = 0;
     var sphereMotionFrame = null;
     var pageNav = document.querySelector(".page-nav");
-    var navFadeDistance = 240;
+    var imagineriaSection = document.getElementById("imagineria");
+    var radioSection = document.getElementById("radio");
+    var fiestasVideoFrame = document.querySelector(".fiestas-vimeo-frame iframe");
+    var imagineriaFrame = document.querySelector(".imagineria-frame");
+    var footerSection = document.querySelector(".site-footer");
+    var pointerOverNav = false;
 
     function updatePageNavVisibility() {
-      var remaining = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
-      var opacity = Math.max(0, Math.min(1, remaining / navFadeDistance));
+      var isNavFocused = pageNav.contains(document.activeElement);
+      var opacity = window.matchMedia("(hover: none)").matches || pointerOverNav || isNavFocused ? 1 : 0;
       pageNav.style.opacity = opacity;
-      pageNav.style.pointerEvents = opacity === 0 ? "none" : "auto";
+      pageNav.style.pointerEvents = "auto";
+      pageNav.querySelectorAll(".page-link").forEach(function (link) {
+        link.style.pointerEvents = opacity === 0 ? "none" : "auto";
+      });
     }
+
+    function updatePointerNavState(event) {
+      var isOverNav = Array.prototype.some.call(
+        pageNav.querySelectorAll(".page-link"),
+        function (link) {
+          var bounds = link.getBoundingClientRect();
+          return event.clientX >= bounds.left && event.clientX <= bounds.right &&
+            event.clientY >= bounds.top && event.clientY <= bounds.bottom;
+        }
+      );
+      if (isOverNav !== pointerOverNav) {
+        pointerOverNav = isOverNav;
+        updatePageNavVisibility();
+      }
+    }
+
+    window.addEventListener("pointermove", updatePointerNavState, { passive: true });
+    window.addEventListener("pointerdown", updatePointerNavState, { passive: true });
+    pageNav.addEventListener("focusin", updatePageNavVisibility);
+    pageNav.addEventListener("focusout", function () {
+      window.requestAnimationFrame(updatePageNavVisibility);
+    });
+    window.addEventListener("pointerout", function (event) {
+      if (pointerOverNav && !pageNav.contains(event.relatedTarget)) {
+        pointerOverNav = false;
+        updatePageNavVisibility();
+      }
+    }, { passive: true });
 
     window.addEventListener("mousemove", function (e) {
       mx = e.clientX; my = e.clientY;
@@ -867,23 +1468,77 @@
 
     /* ---------- title scale on scroll ---------- */
     var titleRow = document.querySelector(".title-row");
+    var titleElement = titleRow.querySelector(".site-title");
     var firstRelease = document.querySelector(".release");
     var titleShrinkDistance = firstRelease.offsetTop;
+    var titleCenterStart = firstRelease.getBoundingClientRect().top + window.scrollY;
 
     function updateTitleScale() {
+      titleRow.style.setProperty("--site-title-width", titleElement.offsetWidth + "px");
       var progress = Math.min(window.scrollY / Math.max(titleShrinkDistance, 1), 1);
-      titleRow.style.setProperty("--scroll-scale", 1 - progress * 0.5);
+      var scale = 1 - progress * 0.5;
+      var centerProgress = Math.min(Math.max(
+        (window.scrollY - titleCenterStart) / Math.max(firstRelease.offsetHeight, 1),
+        0
+      ), 1);
+      var pageEdge = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--page-edge")) || 0;
+      var centeredLeft = Math.max(pageEdge, (window.innerWidth - titleElement.offsetWidth * scale) / 2);
+
+      titleRow.style.setProperty("--scroll-scale", scale);
+      titleRow.style.setProperty("--title-offset-x", (centeredLeft - pageEdge) * centerProgress + "px");
     }
+
+    function navigateToSection(event, target, hash) {
+      event.preventDefault();
+      if (window.location.hash !== hash) {
+        window.history.pushState(null, "", hash);
+      }
+
+      var previousScrollBehavior = document.documentElement.style.scrollBehavior;
+      var previousScrollSnapType = document.documentElement.style.scrollSnapType;
+      var targetTop = target.getBoundingClientRect().top + window.scrollY;
+      document.documentElement.style.scrollBehavior = "auto";
+      document.documentElement.style.scrollSnapType = "none";
+      window.scrollTo(0, targetTop);
+      updateTitleScale();
+      updatePageNavVisibility();
+      updateSectionMode();
+      scheduleSphereMotion();
+      window.requestAnimationFrame(function () {
+        document.documentElement.style.scrollBehavior = previousScrollBehavior;
+        document.documentElement.style.scrollSnapType = previousScrollSnapType;
+      });
+    }
+
+    document.querySelectorAll('.page-nav a:not([href="#fiestas"])').forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        navigateToSection(event, document.querySelector(link.getAttribute("href")), link.getAttribute("href"));
+      });
+    });
+
+    var fiestasNavLink = document.querySelector('.page-nav a[href="#fiestas"]');
+    var fiestasVideoStage = document.querySelector(".fiestas-video-stage");
+
+    fiestasNavLink.addEventListener("click", function (event) {
+      var videoUrl = new URL(fiestasVideoFrame.src);
+      videoUrl.searchParams.set("autoplay", "1");
+      videoUrl.searchParams.set("muted", "1");
+      fiestasVideoFrame.src = videoUrl.toString();
+      navigateToSection(event, fiestasVideoStage, "#fiestas");
+    });
 
     window.addEventListener("scroll", function () {
       updateTitleScale();
       updatePageNavVisibility();
+      updateSectionMode();
       scheduleSphereMotion();
     }, { passive: true });
     window.addEventListener("resize", function () {
       titleShrinkDistance = firstRelease.offsetTop;
+      titleCenterStart = firstRelease.getBoundingClientRect().top + window.scrollY;
       updateTitleScale();
       updatePageNavVisibility();
+      updateSectionMode();
       sphereCursorX = (mx / window.innerWidth) * 2 - 1;
       sphereCursorY = (my / window.innerHeight) * 2 - 1;
       scheduleSphereMotion();
@@ -895,6 +1550,15 @@
     var toggle = document.getElementById("ns-toggle");
     var root = document.documentElement;
     var sphereFrame = document.getElementById("sphere-frame");
+    var heroSection = document.querySelector(".hero");
+
+    heroSection.addEventListener("click", function (event) {
+      if (!document.body.classList.contains("main-active")) return;
+      if (event.target.closest("a, button, input, dialog, .tagline")) return;
+      sphereFrame.contentWindow.postMessage({
+        type: "alta-costura-direction-toggle"
+      }, "*");
+    });
 
     function scheduleSphereMotion() {
       if (sphereMotionFrame !== null) return;
@@ -918,9 +1582,57 @@
       }, "*");
     }
 
+    function syncImagineriaTheme(theme) {
+      imagineriaFrame.contentWindow.postMessage({
+        type: "alta-costura-theme",
+        theme: theme
+      }, "*");
+    }
+
+    function syncImagineriaVisibility(visible) {
+      imagineriaFrame.contentWindow.postMessage({
+        type: "alta-costura-imagineria-visibility",
+        visible: visible
+      }, "*");
+    }
+
+    function updateSectionMode() {
+      var viewportTop = window.scrollY;
+      var viewportBottom = viewportTop + window.innerHeight;
+      var heroTop = heroSection.getBoundingClientRect().top + window.scrollY;
+      var isMainActive =
+        viewportTop >= heroTop &&
+        viewportBottom <= heroTop + heroSection.offsetHeight;
+      var radioTop = radioSection.getBoundingClientRect().top + window.scrollY;
+      var isRadioActive =
+        viewportTop >= radioTop &&
+        viewportTop < radioTop + radioSection.offsetHeight;
+      var imagineriaBounds = imagineriaSection.getBoundingClientRect();
+      var isImagineriaActive =
+        imagineriaBounds.top < window.innerHeight &&
+        imagineriaBounds.bottom > 0 &&
+        imagineriaBounds.left <= 1 &&
+        imagineriaBounds.right >= document.documentElement.clientWidth - 1;
+      var wasImagineriaActive = document.body.classList.contains("imagineria-active");
+      var footerTop = footerSection.getBoundingClientRect().top + window.scrollY;
+      var isFooterActive = viewportBottom > footerTop;
+      document.body.classList.toggle("main-active", isMainActive);
+      document.body.classList.toggle("radio-active", isRadioActive);
+      document.body.classList.toggle("imagineria-active", isImagineriaActive);
+      document.body.classList.toggle("footer-active", isFooterActive);
+      if (isImagineriaActive !== wasImagineriaActive) {
+        syncImagineriaVisibility(isImagineriaActive);
+      }
+    }
+
     sphereFrame.addEventListener("load", function () {
       syncSphereTheme(root.getAttribute("data-theme"));
       scheduleSphereMotion();
+    });
+
+    imagineriaFrame.addEventListener("load", function () {
+      syncImagineriaTheme(root.getAttribute("data-theme"));
+      syncImagineriaVisibility(document.body.classList.contains("imagineria-active"));
     });
 
     function applyTheme(theme) {
@@ -932,6 +1644,7 @@
         toggle.setAttribute("aria-pressed", "false");
       }
       syncSphereTheme(theme);
+      syncImagineriaTheme(theme);
     }
 
     function themeByClock() {
@@ -939,13 +1652,35 @@
       return (h >= 19 || h < 7) ? "dark" : "light";
     }
 
-    var saved = localStorage.getItem("alta-costura-theme");
-    applyTheme(saved || themeByClock());
+    var lastClockTheme = themeByClock();
+    applyTheme(lastClockTheme);
+    window.setInterval(function () {
+      var clockTheme = themeByClock();
+      if (clockTheme !== lastClockTheme) {
+        lastClockTheme = clockTheme;
+        applyTheme(clockTheme);
+      }
+    }, 60000);
+    updateSectionMode();
 
     toggle.addEventListener("click", function () {
       var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
       applyTheme(next);
-      localStorage.setItem("alta-costura-theme", next);
+    });
+
+    document.querySelectorAll(".artist-card-cell .artist-hit").forEach(function (hit) {
+      hit.addEventListener("keydown", function (event) {
+        if (event.target.closest("a")) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          hit.closest(".artist-card-cell").classList.toggle("is-flipped");
+        }
+      });
+      hit.addEventListener("click", function (event) {
+        if (window.matchMedia("(hover: none)").matches && !event.target.closest("a")) {
+          hit.closest(".artist-card-cell").classList.toggle("is-flipped");
+        }
+      });
     });
   </script>
 

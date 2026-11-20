@@ -1,0 +1,409 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Deriva de imágenes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Layout: un campo de pantalla completa donde cada cuadro avanza en línea recta y rebota contra los bordes (algunos se escapan un rato fuera de pantalla); sólo se frena el que toca el cursor. */
+:root{
+  --bg:#fff;
+  --fg:#101116;
+  --mist-a:rgba(255,255,255,.78);
+  --mist-b:rgba(176,190,228,.34);
+  --ph:rgba(16,17,22,.07);
+  --shadow:rgba(28,30,52,.26);
+  --font-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#000;
+    --fg:#fff;
+    --mist-a:rgba(118,128,196,.17);
+    --mist-b:rgba(150,108,206,.13);
+    --ph:rgba(233,234,240,.08);
+    --shadow:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000;
+  --fg:#fff;
+  --mist-a:rgba(118,128,196,.17);
+  --mist-b:rgba(150,108,206,.13);
+  --ph:rgba(233,234,240,.08);
+  --shadow:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+
+html,body{height:100%}
+body{margin:0;overflow:hidden;background:var(--bg);color:var(--fg)}
+
+.stage{
+  position:relative;height:100%;overflow:hidden;
+  background:
+    radial-gradient(62% 52% at 22% 28%,var(--mist-a),transparent 72%),
+    radial-gradient(58% 58% at 80% 74%,var(--mist-b),transparent 72%),
+    var(--bg);
+}
+.field{position:absolute;inset:0;margin:0;padding:0;list-style:none}
+
+.item{
+  position:absolute;left:0;top:0;
+  opacity:0;transition:opacity 2s ease;
+  will-change:transform;
+  -webkit-user-select:none;user-select:none;
+}
+.item.on{opacity:1}
+.item.is-active{z-index:1000!important}
+.item{cursor:zoom-in}
+
+.frame{
+  width:100%;height:100%;
+  background:var(--ph);
+  box-shadow:0 22px 60px -18px var(--shadow);
+}
+.frame img,.frame video{
+  display:block;width:100%;height:100%;max-width:none;
+  object-fit:cover;pointer-events:none;
+}
+
+.cap{
+  position:absolute;left:0;top:100%;margin-top:10px;
+  width:max-content;max-width:min(340px,calc(100vw - 32px));
+  padding:3px 7px;
+  background:var(--bg);color:var(--fg);
+  font:400 12px/1.45 var(--font-mono);letter-spacing:.01em;
+  overflow-wrap:anywhere;
+  opacity:0;transition:opacity .25s ease;
+  pointer-events:none;
+}
+.item.is-active .cap{opacity:1}
+
+/* Vista ampliada */
+.lb{position:absolute;inset:0;z-index:3000;cursor:zoom-out}
+.lb-bg{
+  position:absolute;inset:0;opacity:0;transition:opacity .5s ease;
+  background:color-mix(in srgb,var(--bg) 74%,transparent);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+.lb-box{
+  position:absolute;transform-origin:0 0;
+  transition:transform .6s cubic-bezier(.2,.7,.15,1);
+  background:var(--ph);box-shadow:0 34px 90px -24px var(--shadow);
+}
+.lb-box>*{display:block;width:100%;height:100%;max-width:none;object-fit:cover;pointer-events:none}
+.lb-cap{
+  position:absolute;width:max-content;max-width:calc(100% - 32px);
+  padding:3px 7px;background:var(--bg);color:var(--fg);
+  font:400 12px/1.45 var(--font-mono);letter-spacing:.01em;overflow-wrap:anywhere;
+  opacity:0;transition:opacity .3s ease;pointer-events:none;
+}
+.lb.open .lb-bg{opacity:1}
+.lb.open .lb-cap{opacity:1;transition-delay:.3s}
+@media (prefers-reduced-motion:reduce){
+  .lb-bg,.lb-box,.lb-cap{transition-duration:.01s;transition-delay:0s!important}
+}
+</style>
+
+<main class="stage" aria-label="Cuadros a la deriva">
+  <ul class="field">
+    <li class="item" data-ar="0.8148"><div class="frame"><img src="media/balmain-1.jpg" alt="balmain-1.jpg" width="563" height="691" decoding="async" draggable="false"></div><span class="cap">balmain-1.jpg</span></li>
+    <li class="item" data-ar="0.8148"><div class="frame"><img src="media/balmain-2.jpg" alt="balmain-2.jpg" width="563" height="691" decoding="async" draggable="false"></div><span class="cap">balmain-2.jpg</span></li>
+    <li class="item" data-ar="0.8000"><div class="frame"><img src="media/desarrollo_de_zapatilla_para_r.a.s.h.a.d._2.jpg" alt="desarrollo_de_zapatilla_para_r.a.s.h.a.d._2.jpg" width="1080" height="1350" decoding="async" draggable="false"></div><span class="cap">desarrollo_de_zapatilla_para_r.a.s.h.a.d._2.jpg</span></li>
+    <li class="item" data-ar="1.3333"><div class="frame"><img src="media/dr_low_haciendo_el_pase_con_dim_deck._noviembre_2025.jpg" alt="dr_low_haciendo_el_pase_con_dim_deck._noviembre_2025.jpg" width="1400" height="1050" decoding="async" draggable="false"></div><span class="cap">dr_low_haciendo_el_pase_con_dim_deck._noviembre_2025.jpg</span></li>
+    <li class="item" data-ar="3.0042"><div class="frame"><img src="media/frsh_filters_-_dise_o_especial_para_presentaci_n_de_works_21-24.jpg" alt="frsh_filters_-_dise_o_especial_para_presentaci_n_de_works_21-24.jpg" width="709" height="236" decoding="async" draggable="false"></div><span class="cap">frsh_filters_-_dise_o_especial_para_presentaci_n_de_works_21-24.jpg</span></li>
+    <li class="item" data-ar="1.0000"><div class="frame"><img src="media/this-is-techno.jpg" alt="this-is-techno.jpg" width="600" height="600" decoding="async" draggable="false"></div><span class="cap">this-is-techno.jpg</span></li>
+    <li class="item" data-ar="1.0000"><div class="frame"><img src="media/this-is-techno1.jpg" alt="this-is-techno1.jpg" width="600" height="600" decoding="async" draggable="false"></div><span class="cap">this-is-techno1.jpg</span></li>
+    <li class="item" data-ar="1.0000"><div class="frame"><img src="media/transmisi_n_1_deeper_x_low_profile_2024.jpg" alt="transmisi_n_1_deeper_x_low_profile_2024.jpg" width="500" height="500" decoding="async" draggable="false"></div><span class="cap">transmisi_n_1_deeper_x_low_profile_2024.jpg</span></li>
+    <li class="item" data-ar="1.0000"><div class="frame"><img src="media/transmisi_n_1_x_low_profile_2024.jpg" alt="transmisi_n_1_x_low_profile_2024.jpg" width="1280" height="1280" decoding="async" draggable="false"></div><span class="cap">transmisi_n_1_x_low_profile_2024.jpg</span></li>
+    <li class="item" data-ar="1.0000"><div class="frame"><img src="media/transmisi_n_4_x_low_profile_2024.jpg" alt="transmisi_n_4_x_low_profile_2024.jpg" width="1400" height="1400" decoding="async" draggable="false"></div><span class="cap">transmisi_n_4_x_low_profile_2024.jpg</span></li>
+    <li class="item" data-ar="1.0000"><div class="frame"><img src="media/transmisi_n_5_x_low_profile_2024.jpg" alt="transmisi_n_5_x_low_profile_2024.jpg" width="1280" height="1280" decoding="async" draggable="false"></div><span class="cap">transmisi_n_5_x_low_profile_2024.jpg</span></li>
+    <li class="item" data-ar="0.9764"><div class="frame"><img src="media/sed_de_rito_-_exploraci_n_2.jpg" alt="sed_de_rito_-_exploraci_n_2.jpg" width="1280" height="1311" decoding="async" draggable="false"></div><span class="cap">sed_de_rito_-_exploraci_n_2.jpg</span></li>
+    <li class="item" data-ar="1.0000"><div class="frame"><img src="media/sed_de_rito_-_exploraci_n_3.jpg" alt="sed_de_rito_-_exploraci_n_3.jpg" width="1280" height="1280" decoding="async" draggable="false"></div><span class="cap">sed_de_rito_-_exploraci_n_3.jpg</span></li>
+    <li class="item" data-ar="0.9764"><div class="frame"><img src="media/sed_de_rito_-_exploraci_n.jpg" alt="sed_de_rito_-_exploraci_n.jpg" width="1280" height="1311" decoding="async" draggable="false"></div><span class="cap">sed_de_rito_-_exploraci_n.jpg</span></li>
+  </ul>
+</main>
+
+<script>
+(() => {
+  let animationFrame = null;
+  let isVisible = window.parent === window;
+  let hasRevealed = false;
+
+  window.addEventListener('message', event => {
+    const data = event.data;
+    if (!data) return;
+    if (data.type === 'alta-costura-theme' &&
+        (data.theme === 'light' || data.theme === 'dark')) {
+      document.documentElement.setAttribute('data-theme', data.theme);
+    } else if (data.type === 'alta-costura-imagineria-visibility' &&
+        typeof data.visible === 'boolean') {
+      isVisible = data.visible;
+      if (isVisible) {
+        revealImages();
+        startAnimation();
+      }
+      else stopAnimation();
+    }
+  });
+
+  /* Ajustes */
+  const SPEED = 1;     // multiplicador global de la velocidad: 1 = base, 1.3 = un 30 % más rápido
+  const EASE  = 0.28;  // segundos que tarda la marcha en frenar y en retomar
+  const HOLD  = 22;    // px de margen alrededor del cuadro activo para no soltarlo por un roce
+  const AWAY  = [1.5, 4.5]; // segundos que un cuadro escapado pasa fuera de pantalla antes de volver
+  const ESCAPISTAS = 0.45;  // proporción de cuadros que pueden escaparse por un borde
+
+  const stage  = document.querySelector('.stage');
+  const els    = [...stage.querySelectorAll('.item')];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const sign = () => (Math.random() < 0.5 ? -1 : 1);
+
+  /* Cada cuadro recibe una "profundidad" (0 lejos, 1 cerca): los cercanos son más grandes, más rápidos y quedan por encima.
+     Cada uno sale en una dirección oblicua al azar y la mantiene hasta chocar con un borde. */
+  const order = els.map((_, i) => i).sort(() => Math.random() - 0.5);
+  const items = els.map((el, i) => {
+    let d = (order[i] + Math.random()) / els.length;
+    if (el.querySelector('video')) d = 0.86;
+    const ang = rnd(25, 65) * Math.PI / 180;
+    const sp = rnd(40, 70) * (0.8 + 0.5 * d);              // px por segundo
+    return {
+      el, d,
+      frame: el.querySelector('.frame'),
+      cap: el.querySelector('.cap'),
+      ar: parseFloat(el.dataset.ar),
+      x: 0, y: 0, placed: false,
+      rate: reduce.matches ? 0 : SPEED,                 // cada cuadro frena y arranca por su cuenta
+      esc: Math.random() < ESCAPISTAS ? rnd(0.35, 0.65) : 0,  // chance de escaparse cada vez que toca un borde
+      out: null,
+      vx: Math.cos(ang) * sp * sign(),
+      vy: Math.sin(ang) * sp * sign(),
+      w: 0, h: 0
+    };
+  });
+
+  let vw = 0, vh = 0, last = 0, dirty = true;
+  let active = null, viewing = null, lb = null, closing = false, closeTimer = 0, mx = 0, my = 0, mouseIn = false;
+
+  function size() {
+    vw = stage.clientWidth; vh = stage.clientHeight;
+    const base = Math.sqrt(vw * vh);
+    for (const it of items) {
+      const L = Math.max(base * (0.13 + 0.15 * it.d) + 10, 40);
+      it.w = it.ar >= 1 ? L : L * it.ar;
+      it.h = it.ar >= 1 ? L / it.ar : L;
+      it.el.style.width = it.w.toFixed(1) + 'px';
+      it.el.style.height = it.h.toFixed(1) + 'px';
+      it.el.style.zIndex = 1 + Math.round(it.d * 100);
+      if (!it.placed) {
+        it.x = rnd(0, Math.max(0, vw - it.w));
+        it.y = rnd(0, Math.max(0, vh - it.h));
+        it.placed = true;
+      }
+    }
+    dirty = true;
+  }
+
+  /* Un eje de un cuadro: avanza recto y, al tocar el borde, rebota (como el logo del DVD) o, si es escapista y tiene suerte,
+     lo atraviesa: sale entero, espera fuera de pantalla unos segundos y vuelve a entrar por el mismo lado. */
+  function moveAxis(it, k, dt, canEscape) {
+    const size = k === 'x' ? it.w : it.h, view = k === 'x' ? vw : vh;
+    const max = Math.max(0, view - size), v = 'v' + k;
+    const o = it.out && it.out.k === k ? it.out : null;
+
+    if (o) {
+      if (o.phase === 'leave') {
+        it[k] += it[v] * dt;
+        if (o.side < 0 ? it[k] <= -size - 2 : it[k] >= view + 2) o.phase = 'away';
+      } else if (o.phase === 'away') {
+        o.wait -= dt;
+        if (o.wait <= 0) { it[v] = -o.side * Math.abs(it[v]); o.phase = 'back'; }
+      } else {
+        it[k] += it[v] * dt;
+        if (o.side < 0 ? it[k] >= 0 : it[k] <= max) { it[k] = Math.min(Math.max(it[k], 0), max); it.out = null; }
+      }
+      return;
+    }
+
+    it[k] += it[v] * dt;
+    if (it[k] < 0 || it[k] > max) {
+      const side = it[k] < 0 ? -1 : 1;
+      if (canEscape && !it.out && Math.random() < it.esc) {
+        it.out = { k, side, phase: 'leave', wait: rnd(AWAY[0], AWAY[1]) };
+        return;
+      }
+      it[k] = side < 0 ? -it[k] : 2 * max - it[k];
+      it[v] = -side * Math.abs(it[v]);
+      it[k] = Math.min(Math.max(it[k], 0), max);
+    }
+  }
+
+  function render() {
+    for (const it of items) it.el.style.transform = `translate3d(${it.x.toFixed(2)}px,${it.y.toFixed(2)}px,0)`;
+  }
+
+  /* Nombre al pie del cuadro; si el cuadro está contra un borde, el nombre se corre para seguir a la vista. */
+  function placeCaption(it) {
+    const c = it.cap;
+    c.style.transform = '';
+    const sr = stage.getBoundingClientRect();
+    const r = it.el.getBoundingClientRect();
+    const left = r.left - sr.left, bottom = r.bottom - sr.top;
+    const cw = c.offsetWidth, ch = c.offsetHeight, pad = 12;
+    const x = Math.min(Math.max(left, pad), Math.max(pad, vw - pad - cw));
+    const top = Math.max(Math.min(bottom + 10, vh - pad - ch), pad);
+    c.style.transform = `translate(${(x - left).toFixed(1)}px,${(top - bottom - 10).toFixed(1)}px)`;
+  }
+
+  function setActive(it) {
+    if (it === active) return;
+    if (active) active.el.classList.remove('is-active');
+    active = it;
+    if (it) { it.el.classList.add('is-active'); placeCaption(it); }
+  }
+
+  function pick() {
+    if (!mouseIn) return null;
+    const hit = document.elementFromPoint(mx, my);
+    const el = hit && hit.closest && hit.closest('.item');
+    if (el) return items[els.indexOf(el)];
+    if (active) {
+      const r = active.el.getBoundingClientRect();
+      if (mx > r.left - HOLD && mx < r.right + HOLD && my > r.top - HOLD && my < r.bottom + HOLD) return active;
+    }
+    return null;
+  }
+
+  function tick(now) {
+    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
+    last = now;
+    setActive(viewing ? null : pick());
+    let moving = false;
+    for (const it of items) {
+      const target = (it === active || it === viewing || reduce.matches) ? 0 : SPEED;   // sólo el cuadro tocado se frena
+      it.rate += (target - it.rate) * (1 - Math.exp(-dt / EASE));
+      if (it.rate < 0.004 && !target) it.rate = 0;
+      if (it.rate > 0) {
+        moving = true;
+        const d = it.rate * dt;
+        const free = it !== active && it !== viewing;
+        moveAxis(it, 'x', d, free);
+        moveAxis(it, 'y', d, free);
+      }
+    }
+    if (active && active.rate > 0) placeCaption(active);   // el nombre acompaña al cuadro mientras termina de frenar
+    if (moving || dirty) { render(); dirty = false; }
+    animationFrame = requestAnimationFrame(tick);
+  }
+
+  function startAnimation() {
+    if (animationFrame !== null) return;
+    last = performance.now();
+    animationFrame = requestAnimationFrame(tick);
+  }
+
+  function stopAnimation() {
+    if (animationFrame === null) return;
+    cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+  }
+
+  function revealImages() {
+    if (hasRevealed) return;
+    hasRevealed = true;
+    els.forEach((el, i) => {
+      el.style.transitionDelay = (i * 90) + 'ms';
+      requestAnimationFrame(() => el.classList.add('on'));
+    });
+  }
+
+  /* Ver en grande: el cuadro vuela al centro y, al volver a hacer clic (o con Esc), regresa a donde estaba. */
+  function geom(it) {
+    const sr = stage.getBoundingClientRect(), r = it.el.getBoundingClientRect();
+    const m = it.frame.firstElementChild;
+    const nw = (m.videoWidth || m.naturalWidth) || it.w, nh = (m.videoHeight || m.naturalHeight) || it.h;
+    const k = Math.min(vw * 0.9 / nw, vh * 0.82 / nh, 2);       // entra en pantalla, sin pasar del doble de su tamaño real
+    const tw = nw * k, th = nh * k;
+    const tx = (vw - tw) / 2, ty = (vh - th) / 2 - 12;
+    const sc = r.width / tw;
+    return { tx, ty, tw, th, from: `translate(${(r.left - sr.left - tx).toFixed(1)}px,${(r.top - sr.top - ty).toFixed(1)}px) scale(${sc.toFixed(4)})` };
+  }
+
+  function openView(it) {
+    if (viewing) return;
+    viewing = it;
+    setActive(null);
+    const g = geom(it), m = it.frame.firstElementChild, name = it.cap.textContent;
+    lb = document.createElement('div');
+    lb.className = 'lb';
+    lb.setAttribute('role', 'dialog');
+    lb.setAttribute('aria-label', name);
+    const bg = document.createElement('div'); bg.className = 'lb-bg';
+    const box = document.createElement('div'); box.className = 'lb-box';
+    const cap = document.createElement('div'); cap.className = 'lb-cap'; cap.textContent = name;
+    const clone = m.cloneNode(true);
+    if (clone.tagName === 'VIDEO') {
+      clone.muted = true; clone.loop = true; clone.playsInline = true;
+      try { clone.currentTime = m.currentTime; } catch (_) {}
+      clone.play().catch(() => {});
+    }
+    box.appendChild(clone);
+    Object.assign(box.style, { left: g.tx + 'px', top: g.ty + 'px', width: g.tw + 'px', height: g.th + 'px', transform: g.from });
+    Object.assign(cap.style, { left: g.tx + 'px', top: (g.ty + g.th + 12) + 'px' });
+    lb.append(bg, box, cap);
+    stage.appendChild(lb);
+    it.frame.style.visibility = 'hidden';        // la copia grande arranca exactamente encima del cuadro
+    void box.offsetWidth;
+    lb.classList.add('open');
+    box.style.transform = 'none';
+  }
+
+  function finishClose() {
+    clearTimeout(closeTimer);
+    if (!viewing) return;
+    viewing.frame.style.visibility = '';
+    lb.remove(); lb = null; viewing = null; closing = false;
+  }
+
+  function closeView() {
+    if (!viewing || closing) return;
+    closing = true;
+    lb.querySelector('.lb-box').style.transform = geom(viewing).from;   // vuelve al lugar actual del cuadro
+    lb.classList.remove('open');
+    closeTimer = setTimeout(finishClose, 640);
+  }
+
+  /* Entradas: el mouse frena por hover; el clic (o el toque) abre y vuelve a cerrar la vista grande. */
+  stage.addEventListener('pointermove', e => {
+    if (e.pointerType === 'mouse') { mx = e.clientX; my = e.clientY; mouseIn = true; }
+  });
+  stage.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') mouseIn = false; });
+  document.addEventListener('mouseleave', () => { mouseIn = false; });
+  stage.addEventListener('click', e => {
+    if (viewing) { closeView(); return; }
+    const el = e.target.closest('.item');
+    if (el) openView(items[els.indexOf(el)]);
+  });
+  addEventListener('keydown', e => { if (e.key === 'Escape') closeView(); });
+
+  /* Videos: siempre mudos y en loop; si el navegador pidió un gesto para arrancar, arrancan al primer toque. */
+  document.querySelectorAll('video').forEach(v => {
+    v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true;
+    const go = () => v.play().catch(() => {});
+    go();
+    addEventListener('pointerdown', go, { once: true });
+  });
+
+  addEventListener('resize', () => { finishClose(); size(); });
+  size();
+  render();
+  last = performance.now();
+  if (isVisible) {
+    revealImages();
+    startAnimation();
+  }
+})();
+</script>
+
+</body></html>

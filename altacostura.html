@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es-AR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>ALTA COSTURA</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        font-family: "Times New Roman", Times, serif;
+      }
+
+      .site-title {
+        color: blue;
+        font-size: 94px;
+      }
+
+      .page-nav {
+        position: fixed;
+        bottom: 2rem;
+        left: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.15rem;
+      }
+
+      .page-link {
+        color: blue;
+        font-size: 2.5rem;
+        line-height: 1.1;
+      }
+
+      .page-link.is-purple {
+        color: purple;
+      }
+
+      @media (max-width: 600px) {
+        .page-nav {
+          bottom: 1rem;
+          left: 1rem;
+        }
+
+        .page-link {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body id="top">
+    <a class="site-title" href="#top">ALTA COSTURA</a>
+    <nav class="page-nav" aria-label="Secciones">
+      <a class="page-link" href="#catalogo">Catálogo</a>
+      <a class="page-link" href="#radio">Radio</a>
+      <a class="page-link" href="#imagineria">Imaginería</a>
+      <a class="page-link" href="#fiestas">Fiestas</a>
+    </nav>
+    <script>
+      document.querySelectorAll(".page-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          link.classList.toggle("is-purple");
+        });
+      });
+    </script>
+  </body>
+</html>
