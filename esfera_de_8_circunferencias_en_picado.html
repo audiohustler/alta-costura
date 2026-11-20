@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Globo de meridianos y paralelos — Perspectiva en picado</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: transparent;
+      color: #f4f4f5;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    #ring-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Lienzo principal adaptativo de alta eficiencia -->
+  <canvas id="ring-canvas" aria-label="Globo geométrico con meridianos y paralelos"></canvas>
+
+  <script>
+    /**
+     * Arquitectura de renderizado 3D de alta eficiencia (Zero-Allocation Loop):
+     * - 8 meridianos cruzados en ambos polos y 5 paralelos de latitud, incluido el ecuador.
+     * - El cursor vertical inclina el globo hasta 80°; el horizontal cambia su ángulo de base.
+     * - Proyección 3D en picado con rotación lenta alrededor del eje polar.
+     * - Trazo uniforme de 1px, sin atenuación ni efectos.
+     */
+    (function () {
+      'use strict';
+
+      const canvas = document.getElementById('ring-canvas');
+      const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+
+      // Constantes geométricas del globo
+      const MERIDIANS = 8;
+      const PARALLEL_LATITUDES = [-60, -30, 0, 30, 60];
+      const PARALLELS = PARALLEL_LATITUDES.length;
+      const RING_COUNT = MERIDIANS + PARALLELS;
+      const TWO_PI = Math.PI * 2;
+      const MERIDIAN_STEP = Math.PI / MERIDIANS; // 22.5° (π/8 rad): 8 círculos completos = 16 semiarcos cada 22.5°
+      const SEGMENTS = 96;                       // Alta suavidad por circunferencia
+      const FIT_ANGLE_STEPS = 256;
+
+      // Parámetros de cámara y orientación
+      const PICADO_TILT_RAD = (32 * Math.PI) / 180; // Perspectiva en picado (~32° mirando desde arriba)
+      const ROLL_RIGHT_RAD = (10 * Math.PI) / 180;  // Inclinación de 10° hacia la derecha
+      const MAX_CURSOR_TILT_RAD = (80 * Math.PI) / 180;
+      const MAX_CURSOR_SPIN_OFFSET_RAD = Math.PI / 2;
+      const FOV_FACTOR = 3.2;                       // Distancia focal relativa al radio para perspectiva natural
+      const ANGULAR_VELOCITY = TWO_PI / 38;         // Velocidad lenta: 1 rotación completa cada 38s
+
+      // Trigonometría fija de cámara
+      const cosRoll = Math.cos(ROLL_RIGHT_RAD);
+      const sinRoll = Math.sin(ROLL_RIGHT_RAD);
+
+      // Tablas precalculadas (Zero-Allocation)
+      const meridianCos = new Float32Array(MERIDIANS);
+      const meridianSin = new Float32Array(MERIDIANS);
+      for (let m = 0; m < MERIDIANS; m++) {
+        const phi = m * MERIDIAN_STEP;
+        meridianCos[m] = Math.cos(phi);
+        meridianSin[m] = Math.sin(phi);
+      }
+
+      const parallelSin = new Float32Array(PARALLELS);
+      const parallelCos = new Float32Array(PARALLELS);
+      for (let p = 0; p < PARALLELS; p++) {
+        const latitude = (PARALLEL_LATITUDES[p] * Math.PI) / 180;
+        parallelSin[p] = Math.sin(latitude);
+        parallelCos[p] = Math.cos(latitude);
+      }
+
+      // Muestreo unitario de cada circunferencia (t=0 y t=π son los polos norte y sur)
+      const ringCos = new Float32Array(SEGMENTS + 1); // Eje polar Y (altura desde el centro)
+      const ringSin = new Float32Array(SEGMENTS + 1); // Distancia radial al eje polar
+      for (let s = 0; s <= SEGMENTS; s++) {
+        const theta = (s / SEGMENTS) * TWO_PI;
+        ringCos[s] = Math.cos(theta);
+        ringSin[s] = Math.sin(theta);
+      }
+
+      // Buffers preasignados para proyectar todos los meridianos y ajustar sus límites al viewport.
+      const pointsPerMeridian = SEGMENTS + 1;
+      const projX = new Float32Array(RING_COUNT * pointsPerMeridian);
+      const projY = new Float32Array(RING_COUNT * pointsPerMeridian);
+
+      // Estado del viewport y animación
+      let width = 0;
+      let height = 0;
+      let dpr = 1;
+      let sphereRadius = 0;
+      let fitMinX = 0;
+      let fitMaxX = 0;
+      let fitMinY = 0;
+      let fitMaxY = 0;
+      let spinAngle = 0;
+      let angularVelocity = ANGULAR_VELOCITY;
+      let targetAngularVelocity = ANGULAR_VELOCITY;
+      let cursorX = 0;
+      let cursorY = 0;
+      let sphereTilt = 0;
+      let targetSphereTilt = 0;
+      let sphereSpinOffset = 0;
+      let targetSphereSpinOffset = 0;
+      let sectionProgress = 0;
+      let lastTimestamp = 0;
+      let rafId = null;
+      let lineColor = '#000000';
+
+      /**
+       * Bound the union of every projected circle across one complete rotation of the meridian set.
+       */
+      function calculateFitBounds() {
+        fitMinX = Infinity;
+        fitMaxX = -Infinity;
+        fitMinY = Infinity;
+        fitMaxY = -Infinity;
+
+        const fitPitches = [
+          PICADO_TILT_RAD,
+          Math.PI / 2,
+          PICADO_TILT_RAD + MAX_CURSOR_TILT_RAD
+        ];
+        for (let p = 0; p < fitPitches.length; p++) {
+          const cosFitPitch = Math.cos(fitPitches[p]);
+          const sinFitPitch = Math.sin(fitPitches[p]);
+          for (let a = 0; a <= FIT_ANGLE_STEPS; a++) {
+            const fitAngle = (a / FIT_ANGLE_STEPS) * MERIDIAN_STEP;
+            const cosFit = Math.cos(fitAngle);
+            const sinFit = Math.sin(fitAngle);
+            const cameraDist = sphereRadius * FOV_FACTOR;
+
+            for (let m = 0; m < RING_COUNT; m++) {
+              const isMeridian = m < MERIDIANS;
+              const parallel = m - MERIDIANS;
+              const azCos = isMeridian
+                ? meridianCos[m] * cosFit - meridianSin[m] * sinFit
+                : 0;
+              const azSin = isMeridian
+                ? meridianSin[m] * cosFit + meridianCos[m] * sinFit
+                : 0;
+
+              for (let s = 0; s <= SEGMENTS; s++) {
+                let x0;
+                let y0;
+                let z0;
+                if (isMeridian) {
+                  const radial = sphereRadius * ringSin[s];
+                  x0 = radial * azCos;
+                  y0 = sphereRadius * ringCos[s];
+                  z0 = radial * azSin;
+                } else {
+                  const angle = (s / SEGMENTS) * TWO_PI + fitAngle;
+                  const radial = sphereRadius * parallelCos[parallel];
+                  x0 = radial * Math.cos(angle);
+                  y0 = sphereRadius * parallelSin[parallel];
+                  z0 = radial * Math.sin(angle);
+                }
+                const y1 = y0 * cosFitPitch - z0 * sinFitPitch;
+                const z1 = y0 * sinFitPitch + z0 * cosFitPitch;
+                const perspective = cameraDist / (cameraDist - z1);
+                const px = x0 * perspective;
+                const py = -y1 * perspective;
+                const x = px * cosRoll - py * sinRoll;
+                const y = px * sinRoll + py * cosRoll;
+
+                fitMinX = Math.min(fitMinX, x);
+                fitMaxX = Math.max(fitMaxX, x);
+                fitMinY = Math.min(fitMinY, y);
+                fitMaxY = Math.max(fitMaxY, y);
+              }
+            }
+          }
+        }
+      }
+
+      function handleResize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 3);
+        width = window.innerWidth;
+        height = window.innerHeight;
+
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+
+        sphereRadius = 1;
+      }
+
+      /**
+       * Render the polar meridians and latitude parallels in the tilted globe projection.
+       */
+      function renderFrame() {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        ctx.clearRect(0, 0, width, height);
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = lineColor;
+
+        const globeSpinAngle = spinAngle + sphereSpinOffset;
+        const cosSpin = Math.cos(globeSpinAngle);
+        const sinSpin = Math.sin(globeSpinAngle);
+        const cameraDist = sphereRadius * FOV_FACTOR;
+        const pitch = PICADO_TILT_RAD + sphereTilt;
+        const cosPitch = Math.cos(pitch);
+        const sinPitch = Math.sin(pitch);
+
+        for (let m = 0; m < RING_COUNT; m++) {
+          const isMeridian = m < MERIDIANS;
+          const parallel = m - MERIDIANS;
+          const azCos = isMeridian
+            ? meridianCos[m] * cosSpin - meridianSin[m] * sinSpin
+            : 0;
+          const azSin = isMeridian
+            ? meridianSin[m] * cosSpin + meridianCos[m] * sinSpin
+            : 0;
+
+          for (let s = 0; s <= SEGMENTS; s++) {
+            const pointIndex = m * pointsPerMeridian + s;
+            let x0;
+            let y0;
+            let z0;
+            if (isMeridian) {
+              const radial = sphereRadius * ringSin[s];
+              x0 = radial * azCos;
+              y0 = sphereRadius * ringCos[s];
+              z0 = radial * azSin;
+            } else {
+              const angle = (s / SEGMENTS) * TWO_PI + globeSpinAngle;
+              const radial = sphereRadius * parallelCos[parallel];
+              x0 = radial * Math.cos(angle);
+              y0 = sphereRadius * parallelSin[parallel];
+              z0 = radial * Math.sin(angle);
+            }
+
+            const y1 = y0 * cosPitch - z0 * sinPitch;
+            const z1 = y0 * sinPitch + z0 * cosPitch;
+
+            const scale = cameraDist / (cameraDist - z1);
+            const px = x0 * scale;
+            const py = -y1 * scale;
+
+            const x = px * cosRoll - py * sinRoll;
+            const y = px * sinRoll + py * cosRoll;
+            projX[pointIndex] = x;
+            projY[pointIndex] = y;
+          }
+        }
+
+        const spanX = Math.max(fitMaxX - fitMinX, Number.EPSILON);
+        const spanY = Math.max(fitMaxY - fitMinY, Number.EPSILON);
+        const fitWidth = Math.max(width - 1, 0);
+        const fitHeight = Math.max(height - 1, 0);
+        const fitScale = Math.min(fitWidth / spanX, fitHeight / spanY);
+        const boundsCenterX = (fitMinX + fitMaxX) * 0.5;
+        const boundsCenterY = (fitMinY + fitMaxY) * 0.5;
+
+        for (let m = 0; m < RING_COUNT; m++) {
+          ctx.beginPath();
+          for (let s = 0; s < SEGMENTS; s++) {
+            const start = m * pointsPerMeridian + s;
+            const end = start + 1;
+            ctx.moveTo(
+              width * 0.5 + (projX[start] - boundsCenterX) * fitScale,
+              height * 0.5 + (projY[start] - boundsCenterY) * fitScale
+            );
+            ctx.lineTo(
+              width * 0.5 + (projX[end] - boundsCenterX) * fitScale,
+              height * 0.5 + (projY[end] - boundsCenterY) * fitScale
+            );
+          }
+          ctx.stroke();
+        }
+      }
+
+      /**
+       * Bucle de animación delta-time sin asignaciones de memoria.
+       */
+      function animate(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const deltaSeconds = Math.min((timestamp - lastTimestamp) * 0.001, 0.1);
+        lastTimestamp = timestamp;
+
+        const easing = 1 - Math.exp(-deltaSeconds * 4);
+        angularVelocity += (targetAngularVelocity - angularVelocity) * easing;
+        sphereTilt += (targetSphereTilt - sphereTilt) * easing;
+        sphereSpinOffset += (targetSphereSpinOffset - sphereSpinOffset) * easing;
+        spinAngle = (spinAngle + angularVelocity * deltaSeconds) % TWO_PI;
+
+        renderFrame();
+        rafId = window.requestAnimationFrame(animate);
+      }
+
+      function startLoop() {
+        if (rafId !== null) return;
+        lastTimestamp = 0;
+        rafId = window.requestAnimationFrame(animate);
+      }
+
+      function stopLoop() {
+        if (rafId !== null) {
+          window.cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+      }
+
+      window.addEventListener('message', (event) => {
+        if (event.source !== window.parent || !event.data) return;
+        if (event.data.type === 'alta-costura-theme') {
+          lineColor = event.data.theme === 'dark' ? '#ffffff' : '#000000';
+          renderFrame();
+          return;
+        }
+        if (event.data.type !== 'alta-costura-motion') return;
+
+        cursorX = Number.isFinite(event.data.cursorX)
+          ? Math.max(-1, Math.min(1, event.data.cursorX))
+          : 0;
+        sectionProgress = Number.isFinite(event.data.sectionProgress)
+          ? Math.max(0, Math.min(1, event.data.sectionProgress))
+          : 0;
+        cursorY = Number.isFinite(event.data.cursorY)
+          ? Math.max(-1, Math.min(1, event.data.cursorY))
+          : 0;
+        targetSphereTilt = Math.max(0, cursorY) * MAX_CURSOR_TILT_RAD;
+        targetSphereSpinOffset = cursorX * MAX_CURSOR_SPIN_OFFSET_RAD;
+        const sectionSpeed = 1 - sectionProgress * 0.75;
+        const edgeProximity = Math.max(Math.abs(cursorX), Math.abs(cursorY));
+        const edgeBoost = edgeProximity * (1 - sectionProgress);
+        targetAngularVelocity =
+          ANGULAR_VELOCITY * sectionSpeed * (1 + edgeBoost * 2.5);
+      });
+
+      // Pausa automática cuando la pestaña está oculta
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          stopLoop();
+        } else {
+          startLoop();
+        }
+      });
+
+      // Ajuste inmediato al redimensionar o rotar el dispositivo
+      window.addEventListener('resize', handleResize, { passive: true });
+      window.addEventListener('orientationchange', handleResize, { passive: true });
+
+      // Inicialización
+      handleResize();
+      calculateFitBounds();
+      renderFrame();
+      startLoop();
+    })();
+  </script>
+</body>
+</html>

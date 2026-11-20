@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>ALTA COSTURA</title>
+  <style>
+    /* ---------- night-shift.css (base) ---------- */
+    :root {
+      --page-edge: 3px;
+      --bg: #fff;
+      --text: #111;
+      --link: #0000ff;
+      --link-red: red;
+      --accent: #8a2be2;
+      /* cursor */
+      --c1: #c9a2ff;
+      --c2: #9b6bff;
+      --c3: #6a2ee0;
+      --c-highlight: rgba(255,255,255,.95);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #000;
+        --text: #fff;
+        --link: #7db2ff;
+        --link-red: #ff5252;
+        --accent: #b26bff;
+        --c1: #d0ffcc;
+        --c2: #39ff14;
+        --c3: #1a7a00;
+        --c-highlight: transparent;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #000;
+      --text: #fff;
+      --link: #7db2ff;
+      --link-red: #ff5252;
+      --accent: #b26bff;
+      --c1: #d0ffcc;
+      --c2: #39ff14;
+      --c3: #1a7a00;
+      --c-highlight: transparent;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-snap-type: y proximity;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      font-family: "Times New Roman", Times, serif;
+      background: var(--bg);
+      color: var(--text);
+      cursor: none;
+      transition: background .3s, color .3s;
+    }
+
+    a {
+      color: var(--link);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+      transition: none;
+    }
+    a:hover { color: var(--link); }
+    a:active { color: var(--link-red); }
+
+    /* ---------- cursor ---------- */
+    #cursor {
+      position: fixed;
+      top: 0; left: 0;
+      width: 150px; height: 150px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      background:
+        radial-gradient(circle at 36% 30%, var(--c-highlight) 0%, transparent 16%),
+        radial-gradient(circle at 45% 45%, var(--c1) 0%, var(--c2) 30%, var(--c3) 58%, transparent 73%);
+      filter: invert(1) blur(11px) saturate(150%);
+      mix-blend-mode: difference;
+      transform: translate(-100px, -100px);
+      will-change: transform;
+      transition: background .3s;
+    }
+    :root[data-theme="dark"] #cursor {
+      filter: blur(11px) saturate(150%);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) #cursor {
+        filter: blur(11px) saturate(150%);
+      }
+    }
+    @media (hover: none) {
+      #cursor { display: none; }
+      body { cursor: auto; }
+    }
+
+    /* ---------- night shift toggle (referencia) ---------- */
+    #ns-toggle {
+      position: fixed;
+      top: 3px;
+      right: 3px;
+      z-index: 300;
+      width: 34px;
+      height: 14px;
+      padding: 1px;
+      border: 1px solid var(--text);
+      border-radius: 7px;
+      background: #d7d7d7;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    #ns-toggle:hover { filter: brightness(.95); }
+    #ns-toggle .toggle-knob {
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 10px;
+      height: 10px;
+      border: 1px solid #777;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .2s;
+    }
+    #ns-toggle[aria-pressed="true"] {
+      background: var(--accent);
+    }
+    #ns-toggle[aria-pressed="true"] .toggle-knob { transform: translateX(20px); }
+
+    /* ---------- hero ---------- */
+    .hero {
+      height: 100vh;
+      padding: var(--page-edge);
+      position: relative;
+      scroll-snap-align: start;
+    }
+
+    .title-row {
+      position: fixed;
+      top: var(--page-edge);
+      left: var(--page-edge);
+      z-index: 200;
+      display: flex;
+      align-items: stretch;
+      gap: 2.5rem;
+      transform: scale(var(--scroll-scale, 1));
+      transform-origin: top left;
+      will-change: transform;
+    }
+
+    .site-title {
+      margin: 0;
+      font-size: clamp(calc(2.4rem + 8px), calc(9vw + 8px), 102px);
+      line-height: .9;
+      font-weight: normal;
+      letter-spacing: -.01em;
+      white-space: nowrap;
+    }
+
+    .tagline {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      line-height: 1.1;
+      text-align: justify;
+      text-justify: inter-word;
+      text-align-last: justify;
+      width: 34ch;
+      max-width: 34ch;
+      align-self: stretch;
+      opacity: 0;
+      transition: opacity .18s linear;
+      padding-top: 2px;
+      pointer-events: none;
+    }
+
+    .site-title:hover + .tagline,
+    .tagline:hover { opacity: 1; pointer-events: auto; }
+
+    /* ---------- nav ---------- */
+    .page-nav {
+      position: fixed;
+      bottom: var(--page-edge);
+      left: var(--page-edge);
+      z-index: 100;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: clamp(.55rem, 2.2vw, 2.5rem);
+      transition: opacity .3s ease;
+    }
+
+    .page-link {
+      color: var(--link);
+      font-size: clamp(1.2rem, 4.7vw, 4rem);
+      line-height: 1.1;
+    }
+
+    /* ---------- catálogo ---------- */
+    #catalogo {
+      --catalog-reduction: 3px;
+      --embed-extra-reduction: 6px;
+      border-top: 1px solid var(--text);
+    }
+
+    .release {
+      min-height: calc(100vh - var(--catalog-reduction));
+      display: flex;
+      flex-direction: row;          /* 1°, 3°, 5°: cover izq. */
+      scroll-snap-align: start;
+      border-bottom: 1px solid var(--text);
+    }
+
+    .release:nth-child(even) {
+      flex-direction: row-reverse;  /* 2°, 4°: cover der. */
+    }
+
+    .release .cover {
+      flex: 0 0 50%;
+      min-height: calc(100vh - var(--catalog-reduction));
+      display: block;
+      padding: 0;
+      border: 0;
+      background-color: #ddd;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .release .cover:focus-visible {
+      outline: 1px solid var(--text);
+      outline-offset: -4px;
+    }
+
+    .release .info {
+      --info-gutter: calc(2rem - var(--catalog-reduction));
+      flex: 1 1 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: calc(1.2rem - var(--catalog-reduction));
+      padding: var(--info-gutter);
+      text-align: center;
+    }
+
+    .release .artist-title {
+      position: sticky;
+      top: var(--page-edge);
+      z-index: 80;
+      margin: 0;
+      font-size: calc(.95rem - var(--catalog-reduction) + 6px);
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: bold;
+      line-height: 1.2;
+      letter-spacing: .01em;
+    }
+
+    .release:nth-child(odd) .artist-title {
+      align-self: flex-end;
+      margin-right: calc(0px - var(--info-gutter));
+      padding-right: var(--page-edge);
+      text-align: right;
+    }
+
+    .release:nth-child(even) .artist-title {
+      align-self: flex-start;
+      margin-left: calc(0px - var(--info-gutter));
+      padding-left: var(--page-edge);
+      text-align: left;
+    }
+
+    .release .artist-title span { display: block; }
+    .release .artist-title span + span { margin-top: .35em; }
+
+    .release .desc {
+      margin: 0;
+      max-width: 44ch;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: calc(.95rem - var(--catalog-reduction));
+      line-height: 1.35;
+      text-align: justify;
+      text-justify: inter-word;
+    }
+
+    .release .desc mark {
+      padding: 0;
+      background: #ff00ff;
+      color: #111;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+
+    .release .tracklist {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      width: 100%;
+      max-width: none;
+      font-family: "Courier New", Courier, monospace;
+      font-size: max(
+        .6rem,
+        calc(clamp(.65rem, 1vw, .95rem) - var(--catalog-reduction))
+      );
+      line-height: 1.4;
+    }
+
+    .release .tracklist + iframe { margin-top: 1em; }
+
+    .release .tracklist li {
+      display: flex;
+      align-items: baseline;
+      gap: .35em;
+      width: 100%;
+    }
+
+    .track-name,
+    .track-duration {
+      white-space: nowrap;
+    }
+
+    .track-leader {
+      flex: 1;
+      min-width: .5em;
+      border-bottom: 1px dotted currentColor;
+      transform: translateY(-.2em);
+    }
+
+    .release iframe {
+      width: 100%;
+      max-width: calc(380px - var(--catalog-reduction) - var(--embed-extra-reduction));
+      height: calc(480px - var(--catalog-reduction) - var(--embed-extra-reduction));
+      flex: 0 0 calc(480px - var(--catalog-reduction) - var(--embed-extra-reduction));
+      border: 1px solid var(--text);
+      background: #fff;
+    }
+
+    /* ---------- placeholders ---------- */
+    .placeholder {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem;
+      text-align: center;
+      scroll-snap-align: start;
+      border-bottom: 1px solid var(--text);
+    }
+
+    .placeholder h2 {
+      margin: 0;
+      font-weight: normal;
+      font-style: italic;
+      font-size: clamp(2.4rem, 8vw, 6rem);
+      line-height: 1;
+    }
+
+    .placeholder p {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+      letter-spacing: .04em;
+    }
+
+    .artist-directory {
+      min-height: 100vh;
+      padding: 3rem 2rem;
+      scroll-snap-align: start;
+      border-bottom: 1px solid var(--text);
+    }
+
+    .artist-directory h2 {
+      margin: 0 0 2rem;
+      text-align: center;
+      font-weight: normal;
+      font-style: italic;
+      font-size: clamp(2.4rem, 8vw, 6rem);
+      line-height: 1;
+    }
+
+    .artist-profiles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+      gap: 1rem 2rem;
+      max-width: 70rem;
+      margin: 0 auto;
+    }
+
+    .artist-profile {
+      min-height: 5rem;
+      padding-top: .5rem;
+      border-top: 1px solid var(--text);
+      scroll-margin-top: 2rem;
+    }
+
+    .artist-profile h3 {
+      margin: 0;
+      font-weight: normal;
+      font-size: 1.5rem;
+    }
+
+    .artist-profile p {
+      margin: .35rem 0 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+    }
+
+    /* ---------- footer ---------- */
+    .site-footer {
+      position: relative;
+      min-height: 30vh;
+      padding: 3rem 2rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      border-top: 1px solid var(--text);
+      text-align: center;
+      scroll-snap-align: end;
+    }
+
+    .copyright-note {
+      position: absolute;
+      right: 0;
+      bottom: 3px;
+      left: 0;
+      margin: 0;
+      padding: 0 3px;
+      font: 4px/1.2 "Courier New", Courier, monospace;
+      text-align: center;
+    }
+
+    .footer-logo {
+      font-size: clamp(1.5rem, 4vw, 3rem);
+      text-decoration: none;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem 2rem;
+      font-size: 1.1rem;
+    }
+
+    .sphere-background {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      transition: filter .35s ease;
+    }
+
+    body:has(.release:hover) .sphere-background { filter: blur(8px); }
+
+    .sphere-frame {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    /* ---------- cover viewer ---------- */
+    .cover-viewer {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      max-width: none;
+      max-height: none;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .cover-viewer::backdrop { background: rgba(0, 0, 0, .5); }
+
+    .cover-viewer img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      display: block;
+      width: min(60vw, 600px);
+      height: min(60vw, 600px);
+      max-height: 70vh;
+      transform: translate(-50%, -50%);
+      object-fit: contain;
+    }
+
+    @keyframes cover-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .cover-viewer[open] img {
+      animation: cover-fade-in 1.8s ease-out both;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cover-viewer[open] img { animation-duration: .01ms; }
+    }
+
+    /* ---------- contact dialog ---------- */
+    .contact-dialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: min(28rem, calc(100vw - 2rem));
+      max-width: none;
+      margin: 0;
+      padding: 3rem 1.25rem 1.25rem;
+      transform: translate(-50%, -50%);
+      border: 1px solid blue;
+      background: #fff;
+      color: #111;
+      font: 16px/1.5 "Courier New", Courier, monospace;
+    }
+
+    .contact-dialog::backdrop { background: rgba(0, 0, 0, .35); }
+
+    .contact-close {
+      position: absolute;
+      top: .45rem;
+      left: .55rem;
+      padding: 0 .2rem;
+      border: 0;
+      background: transparent;
+      color: blue;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .contact-line { margin: 0 0 1.5rem; }
+    .contact-prompt { margin: 0 0 .5rem; }
+
+    .contact-dialog input {
+      width: 100%;
+      padding: .4rem .5rem;
+      border: 1px solid blue;
+      border-radius: 0;
+      background: #fff;
+      color: #111;
+      font: inherit;
+    }
+
+    .contact-dialog input::placeholder { color: rgba(0, 0, 0, .45); }
+
+    /* ---------- responsive ---------- */
+    @media (hover: none), (max-width: 700px) {
+      .title-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .tagline {
+        opacity: 1;
+        align-self: auto;
+        overflow: visible;
+        max-width: 46ch;
+        font-size: 13px;
+        pointer-events: auto;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .release,
+      .release:nth-child(even) {
+        flex-direction: column;     /* siempre cover arriba en mobile */
+      }
+      .release .cover {
+        flex: 0 0 auto;
+        min-height: calc(55vh - var(--catalog-reduction));
+        width: 100%;
+      }
+      .release .info  { flex: 1 1 auto; min-height: 45vh; width: 100%; }
+      .page-nav { bottom: var(--page-edge); left: var(--page-edge); }
+    }
+  </style>
+</head>
+<body id="top">
+
+  <div class="sphere-background" aria-hidden="true">
+    <iframe id="sphere-frame" class="sphere-frame" src="esfera_de_8_circunferencias_en_picado.html"
+      title="" tabindex="-1"></iframe>
+  </div>
+
+  <div id="cursor" aria-hidden="true"></div>
+
+  <button id="ns-toggle" aria-label="Toggle night shift" aria-pressed="false" type="button">
+    <span class="toggle-knob" aria-hidden="true"></span>
+  </button>
+
+  <header class="hero">
+    <div class="title-row">
+      <h1 class="site-title"><a href="#top">ALTA COSTURA</a></h1>
+      <p class="tagline">Plataforma de texturas y relieves, operando ritmos de 80 a 160bpms desde Buenos Aires, Argentina</p>
+    </div>
+  </header>
+
+  <nav class="page-nav" aria-label="Secciones">
+    <a class="page-link" href="#catalogo">Catálogo</a>
+    <a class="page-link" href="#radio">Radio</a>
+    <a class="page-link" href="#imagineria">Imaginería</a>
+    <a class="page-link" href="#fiestas">Fiestas</a>
+    <a class="page-link" href="#artistas">Artistas</a>
+  </nav>
+
+  <main>
+    <section id="catalogo" aria-label="Catálogo">
+
+      <!-- 1 · MANU JAIKIN — EXCESO · cover izquierda -->
+      <article class="release">
+        <button class="cover" type="button" aria-label="View Exceso cover"
+          data-full-image="https://f4.bcbits.com/img/a1893166949_16.jpg"
+          style="background-image:url('https://f4.bcbits.com/img/a1893166949_10.jpg')"></button>
+        <div class="info">
+          <p class="artist-title"><span><a href="#artist-manu-jaikin">Manu Jaikin</a></span><span>Exceso</span></p>
+          <p class="desc"><mark>Footwork contemplativo, invernal, de alta y baja fidelidad, nostálgico, siempre experimental. Un álbum que recorre los bordes del footwork enmarcado en una búsqueda personal, misteriosa y contundente.</mark></p>
+          <ul class="tracklist">
+            <li><span class="track-name">1. Transmisión</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">02:25</span></li>
+            <li><span class="track-name">2. Plateado</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:13</span></li>
+            <li><span class="track-name">3. Desierto</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">02:57</span></li>
+            <li><span class="track-name">4. Y luego</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:16</span></li>
+            <li><span class="track-name">5. Valable</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:38</span></li>
+            <li><span class="track-name">6. UAM II</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:09</span></li>
+          </ul>
+          <iframe title="Exceso — Bandcamp" seamless
+            src="https://bandcamp.com/EmbeddedPlayer/album=2340377981/size=large/bgcol=ffffff/linkcol=0000ff/tracklist=true/artwork=small/transparent=true/"></iframe>
+        </div>
+      </article>
+
+      <!-- 2 · FRSH — WORKS 21-24 · cover derecha -->
+      <article class="release">
+        <button class="cover" type="button" aria-label="View Works 21-24 cover"
+          data-full-image="https://f4.bcbits.com/img/a1009044106_16.jpg"
+          style="background-image:url('https://f4.bcbits.com/img/a1009044106_10.jpg')"></button>
+        <div class="info">
+          <p class="artist-title"><span><a href="#artist-frsh">FRSH</a></span><span>Works 21-24</span></p>
+          <p class="desc"><mark>Siete tracks directamente de su MPC que entrelazan las raíces del juke y el footwork con guiños a la cultura nacional.</mark></p>
+          <ul class="tracklist">
+            <li><span class="track-name">1. Twisted</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:26</span></li>
+            <li><span class="track-name">2. High On Life</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:23</span></li>
+            <li><span class="track-name">3. Juke Japan</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:43</span></li>
+            <li><span class="track-name">4. Never Pt. 2</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:49</span></li>
+            <li><span class="track-name">5. Runnin</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:12</span></li>
+            <li><span class="track-name">6. Macri Cat</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">01:50</span></li>
+            <li><span class="track-name">7. Palabras</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:06</span></li>
+          </ul>
+          <iframe title="Works 21-24 — Bandcamp" seamless
+            src="https://bandcamp.com/EmbeddedPlayer/album=2912990936/size=large/bgcol=ffffff/linkcol=0000ff/tracklist=true/artwork=small/transparent=true/"></iframe>
+        </div>
+      </article>
+
+      <!-- 3 · V.A. — SED DE RITO · cover izquierda -->
+      <article class="release">
+        <button class="cover" type="button" aria-label="View Sed De Rito cover"
+          data-full-image="https://f4.bcbits.com/img/a1031257088_16.jpg"
+          style="background-image:url('https://f4.bcbits.com/img/a1031257088_10.jpg')"></button>
+        <div class="info">
+          <p class="artist-title"><span><a href="#artist-va">V.A.</a></span><span>Sed De Rito</span></p>
+          <p class="desc"><mark>Ocho tracks oscilando entre ambient y juke, coqueteando con el grime y el electro disueltos en una generosa dosis de low-end. Obras de ocho artistas argentinxs de Buenos Aires, Entre Ríos, La Plata y la Patagonia.</mark></p>
+          <ul class="tracklist">
+            <li><span class="track-name">1. <a href="#artist-i2terzon3">i2terzon3</a> — Satellite Collision</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">01:40</span></li>
+            <li><span class="track-name">2. <a href="#artist-kodex">Kodex</a> — Pajaritos</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:45</span></li>
+            <li><span class="track-name">3. <a href="#artist-carol">Carol</a> — Reposo</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">05:20</span></li>
+            <li><span class="track-name">4. <a href="#artist-onzo">Onzo</a> — Silver Juke</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">02:42</span></li>
+            <li><span class="track-name">5. <a href="#artist-sksss">SKSSS</a> — deepsound</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">02:58</span></li>
+            <li><span class="track-name">6. <a href="#artist-mlee">Mlee</a> — Pos Todo ft. <a href="#artist-tobey">Tobey</a></span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:57</span></li>
+            <li><span class="track-name">7. <a href="#artist-laura-butallo">Laura Butallo</a> — Dancers of Dawn</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">04:54</span></li>
+            <li><span class="track-name">8. <a href="#artist-teg-dat">Teg Dat</a> — Evitome</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">04:14</span></li>
+          </ul>
+          <iframe title="Sed De Rito — Bandcamp" seamless
+            src="https://bandcamp.com/EmbeddedPlayer/album=3434309885/size=large/bgcol=ffffff/linkcol=0000ff/tracklist=true/artwork=small/transparent=true/"></iframe>
+        </div>
+      </article>
+
+      <!-- 4 · LUX2000 — LUX2000 · cover derecha -->
+      <article class="release">
+        <button class="cover" type="button" aria-label="View lux2000 cover"
+          data-full-image="https://f4.bcbits.com/img/a4052373160_16.jpg"
+          style="background-image:url('https://f4.bcbits.com/img/a4052373160_10.jpg')"></button>
+        <div class="info">
+          <p class="artist-title"><span><a href="#artist-lux2000">lux2000</a></span><span>lux2000</span></p>
+          <p class="desc"><mark>Corporizada en movimientos microscópicos, una colección de fluidos sónicos para el deporte sináptico en la decadencia de la década. Nueve tracks traídos por intuición como una reminiscencia de la vida rural entre lagos y cerros.</mark></p>
+          <ul class="tracklist">
+            <li><span class="track-name">1. Acuífero</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:48</span></li>
+            <li><span class="track-name">2. Microplásticos</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">04:41</span></li>
+            <li><span class="track-name">3. Irrompible</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">02:27</span></li>
+            <li><span class="track-name">4. 2000 Thru</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">01:11</span></li>
+            <li><span class="track-name">5. Girlhood is a spectrum</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">02:37</span></li>
+            <li><span class="track-name">6. 2000 Theme</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">01:35</span></li>
+            <li><span class="track-name">7. Acuífero (<a href="#artist-dj-issues">DJ Issues</a> Elastic Mix)</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">05:07</span></li>
+            <li><span class="track-name">8. 2000 (<a href="#artist-qetsy">Qetsy</a> Dubwich Flip)</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">01:56</span></li>
+          </ul>
+          <iframe title="lux2000 — Bandcamp" seamless
+            src="https://bandcamp.com/EmbeddedPlayer/album=3301973403/size=large/bgcol=ffffff/linkcol=0000ff/tracklist=true/artwork=small/transparent=true/"></iframe>
+        </div>
+      </article>
+
+      <!-- 5 · DJ ISSUES — CITY LIFE · cover izquierda -->
+      <article class="release">
+        <button class="cover" type="button" aria-label="View CITY LIFE cover"
+          data-full-image="https://f4.bcbits.com/img/a2619066675_16.jpg"
+          style="background-image:url('https://f4.bcbits.com/img/a2619066675_10.jpg')"></button>
+        <div class="info">
+          <p class="artist-title"><span><a href="#artist-dj-issues">DJ ISSUES</a></span><span>CITY LIFE</span></p>
+          <p class="desc"><mark>El primer lanzamiento de ALTA COSTURA: cinco tracks de experimentación rítmica que introducen la naturaleza ruidista de la vida citadina a través de la distorsión y reminiscencias a música del pasado.</mark></p>
+          <ul class="tracklist">
+            <li><span class="track-name">1. INTRODUCING CITY LIFE</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:00</span></li>
+            <li><span class="track-name">2. EMPTY HANDED</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">04:30</span></li>
+            <li><span class="track-name">3. ALGUIEN ALGO</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">03:48</span></li>
+            <li><span class="track-name">4. WALMART (DE LOS RÍOS)</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">04:22</span></li>
+            <li><span class="track-name">5. BANKRUPTCY</span><span class="track-leader" aria-hidden="true"></span><span class="track-duration">09:10</span></li>
+          </ul>
+          <iframe title="CITY LIFE — Bandcamp" seamless
+            src="https://bandcamp.com/EmbeddedPlayer/album=2314539566/size=large/bgcol=ffffff/linkcol=0000ff/tracklist=true/artwork=small/transparent=true/"></iframe>
+        </div>
+      </article>
+
+    </section>
+
+    <section id="radio" class="placeholder" aria-label="Radio">
+      <h2>Radio</h2>
+      <p>próximamente</p>
+    </section>
+
+    <section id="imagineria" class="placeholder" aria-label="Imaginería">
+      <h2>Imaginería</h2>
+      <p>próximamente</p>
+    </section>
+
+    <section id="fiestas" class="placeholder" aria-label="Fiestas">
+      <h2>Fiestas</h2>
+      <p>próximamente</p>
+    </section>
+
+    <section id="artistas" class="artist-directory" aria-label="Artistas">
+      <h2>Artistas</h2>
+      <div class="artist-profiles">
+        <article class="artist-profile" id="artist-manu-jaikin"><h3>Manu Jaikin</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-frsh"><h3>FRSH</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-va"><h3>V.A.</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-i2terzon3"><h3>i2terzon3</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-kodex"><h3>Kodex</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-carol"><h3>Carol</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-onzo"><h3>Onzo</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-sksss"><h3>SKSSS</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-mlee"><h3>Mlee</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-tobey"><h3>Tobey</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-laura-butallo"><h3>Laura Butallo</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-teg-dat"><h3>Teg Dat</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-lux2000"><h3>lux2000</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-dj-issues"><h3>DJ ISSUES</h3><p>próximamente</p></article>
+        <article class="artist-profile" id="artist-qetsy"><h3>Qetsy</h3><p>próximamente</p></article>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <a class="footer-logo" href="#top">ALTA COSTURA</a>
+    <nav class="footer-links" aria-label="Enlaces externos">
+      <a href="https://altacostura.bandcamp.com" target="_blank" rel="noopener noreferrer">Bandcamp</a>
+      <a href="https://soundcloud.com/altacostura2050" target="_blank" rel="noopener noreferrer">SoundCloud</a>
+      <a id="contact-link" href="#contact-dialog">contacto</a>
+    </nav>
+    <p class="copyright-note">Hecho en Argentina. Imaginación Humana Latinoamericana. Todos los derechos reservados Alta Costura 2026.</p>
+  </footer>
+
+  <dialog id="cover-viewer" class="cover-viewer" aria-label="Portada">
+    <img alt="" />
+  </dialog>
+
+  <dialog id="contact-dialog" class="contact-dialog" aria-label="Contacto">
+    <button class="contact-close" type="button" aria-label="Cerrar">×</button>
+    <p class="contact-line">nuestra línea 24hs: <a href="mailto:altacostura2050@gmail.com">altacostura2050@gmail.com</a></p>
+    <p class="contact-prompt">conversemos</p>
+    <input id="contact-email" type="email" placeholder="tu@correo" aria-label="Tu correo"
+      autocomplete="email" />
+  </dialog>
+
+  <script>
+    /* ---------- cover viewer ---------- */
+    var coverViewer = document.getElementById("cover-viewer");
+    var coverViewerImage = coverViewer.querySelector("img");
+
+    document.querySelectorAll(".release .cover").forEach(function (cover) {
+      cover.addEventListener("click", function () {
+        coverViewerImage.src = cover.dataset.fullImage;
+        coverViewerImage.alt = cover.getAttribute("aria-label").replace(/^View /, "");
+        coverViewer.showModal();
+      });
+    });
+
+    coverViewer.addEventListener("click", function () {
+      coverViewer.close();
+    });
+    coverViewer.addEventListener("close", function () {
+      coverViewerImage.removeAttribute("src");
+    });
+
+    /* ---------- contact dialog ---------- */
+    var contactDialog = document.getElementById("contact-dialog");
+    document.getElementById("contact-link").addEventListener("click", function (event) {
+      event.preventDefault();
+      contactDialog.showModal();
+    });
+    document.querySelector(".contact-close").addEventListener("click", function () {
+      contactDialog.close();
+    });
+
+    /* ---------- cursor ---------- */
+    var cur = document.getElementById("cursor");
+    var mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    var cx = mx, cy = my;
+    var targetScale = 1, scale = 1;
+    var sphereCursorX = 0;
+    var sphereCursorY = 0;
+    var sphereMotionFrame = null;
+    var pageNav = document.querySelector(".page-nav");
+    var navFadeDistance = 240;
+
+    function updatePageNavVisibility() {
+      var remaining = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+      var opacity = Math.max(0, Math.min(1, remaining / navFadeDistance));
+      pageNav.style.opacity = opacity;
+      pageNav.style.pointerEvents = opacity === 0 ? "none" : "auto";
+    }
+
+    window.addEventListener("mousemove", function (e) {
+      mx = e.clientX; my = e.clientY;
+      sphereCursorX = (e.clientX / window.innerWidth) * 2 - 1;
+      sphereCursorY = (e.clientY / window.innerHeight) * 2 - 1;
+      scheduleSphereMotion();
+    }, { passive: true });
+
+    document.addEventListener("pointerover", function (e) {
+      targetScale = e.target.closest("a, #ns-toggle") ? 1.6 : 1;
+    });
+
+    (function loop() {
+      cx += (mx - cx) * 0.18;
+      cy += (my - cy) * 0.18;
+      scale += (targetScale - scale) * 0.15;
+      cur.style.transform =
+        "translate(" + cx + "px," + cy + "px) translate(-50%,-50%) scale(" + scale + ")";
+      requestAnimationFrame(loop);
+    })();
+
+    /* ---------- title scale on scroll ---------- */
+    var titleRow = document.querySelector(".title-row");
+    var firstRelease = document.querySelector(".release");
+    var titleShrinkDistance = firstRelease.offsetTop;
+
+    function updateTitleScale() {
+      var progress = Math.min(window.scrollY / Math.max(titleShrinkDistance, 1), 1);
+      titleRow.style.setProperty("--scroll-scale", 1 - progress * 0.5);
+    }
+
+    window.addEventListener("scroll", function () {
+      updateTitleScale();
+      updatePageNavVisibility();
+      scheduleSphereMotion();
+    }, { passive: true });
+    window.addEventListener("resize", function () {
+      titleShrinkDistance = firstRelease.offsetTop;
+      updateTitleScale();
+      updatePageNavVisibility();
+      sphereCursorX = (mx / window.innerWidth) * 2 - 1;
+      sphereCursorY = (my / window.innerHeight) * 2 - 1;
+      scheduleSphereMotion();
+    });
+    updateTitleScale();
+    updatePageNavVisibility();
+
+    /* ---------- night shift ---------- */
+    var toggle = document.getElementById("ns-toggle");
+    var root = document.documentElement;
+    var sphereFrame = document.getElementById("sphere-frame");
+
+    function scheduleSphereMotion() {
+      if (sphereMotionFrame !== null) return;
+      sphereMotionFrame = window.requestAnimationFrame(function () {
+        sphereMotionFrame = null;
+        var releaseTop = firstRelease.getBoundingClientRect().top + window.scrollY;
+        var sectionProgress = Math.min(window.scrollY / Math.max(releaseTop, 1), 1);
+        sphereFrame.contentWindow.postMessage({
+          type: "alta-costura-motion",
+          cursorX: sphereCursorX,
+          cursorY: sphereCursorY,
+          sectionProgress: sectionProgress
+        }, "*");
+      });
+    }
+
+    function syncSphereTheme(theme) {
+      sphereFrame.contentWindow.postMessage({
+        type: "alta-costura-theme",
+        theme: theme
+      }, "*");
+    }
+
+    sphereFrame.addEventListener("load", function () {
+      syncSphereTheme(root.getAttribute("data-theme"));
+      scheduleSphereMotion();
+    });
+
+    function applyTheme(theme) {
+      if (theme === "dark") {
+        root.setAttribute("data-theme", "dark");
+        toggle.setAttribute("aria-pressed", "true");
+      } else {
+        root.setAttribute("data-theme", "light");
+        toggle.setAttribute("aria-pressed", "false");
+      }
+      syncSphereTheme(theme);
+    }
+
+    function themeByClock() {
+      var h = new Date().getHours();
+      return (h >= 19 || h < 7) ? "dark" : "light";
+    }
+
+    var saved = localStorage.getItem("alta-costura-theme");
+    applyTheme(saved || themeByClock());
+
+    toggle.addEventListener("click", function () {
+      var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      applyTheme(next);
+      localStorage.setItem("alta-costura-theme", next);
+    });
+  </script>
+
+</body>
+</html>
